@@ -19,9 +19,21 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+
+        <!-- TornadoFX and JavaFX -->
+        <dependency>
             <groupId>no.tornado</groupId>
             <artifactId>tornadofx</artifactId>
             <version>${tornadofx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.tornado</groupId>
+            <artifactId>tornadofx-controlsfx</artifactId>
+            <version>0.1.1</version>
         </dependency>
         <!--<dependency>
             <groupId>org.openjfx</groupId>
@@ -38,11 +50,8 @@
             <artifactId>javafx-controls</artifactId>
             <version>${openjfx.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
+        <!-- End TornadoFx and JavaFx -->
+
         <!-- ONLY ADDED TO INCREASE COMPATIBILITY AND REMOVE UGLY WARNINGS -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -63,6 +72,7 @@
             <scope>test</scope>
         </dependency>
         <!-- END OF COMPATIBILITY ADDITIONS -->
+
         <!--<dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>

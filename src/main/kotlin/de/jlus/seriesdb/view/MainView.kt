@@ -1,10 +1,9 @@
 package de.jlus.seriesdb.view
 
 import com.sun.javafx.collections.ObservableListWrapper
+import de.jlus.seriesdb.app.*
 import javafx.beans.property.*
-import javafx.scene.control.TabPane
-import javafx.scene.control.TreeItem
-import javafx.scene.control.TreeView
+import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.paint.Paint
 import javafx.scene.text.Font
@@ -96,6 +95,10 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
         }
 
         center = splitpane {
+            // after window was initialized, but the separator in a nice position
+            subscribe<WindowFirstShow> {
+                this@splitpane.setDividerPosition(0, 0.2)
+            }
 
             // the left menu
             add(projectTree.apply {

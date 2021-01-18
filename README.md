@@ -2,7 +2,8 @@
 This software is able to connect to the [HERMESS](https://www.project-hermess.com/) Signal
 Processing Unit and allows for superficial, visual analysis of measurements.
 
-Keywords: _HERMESS_, _REXUS_, _REXUS/BEXUS_, _Kotlin_, _TornadoFx_, _MVVM_
+Keywords: _HERMESS_, _REXUS_, _REXUS/BEXUS_, _Kotlin_, _TornadoFx_, _MVVM_, _.herpro_,
+_.herconf_, _.hermeas_
 
 
 ## Features

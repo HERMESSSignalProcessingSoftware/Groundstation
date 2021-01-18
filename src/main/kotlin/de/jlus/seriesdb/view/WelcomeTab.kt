@@ -1,6 +1,6 @@
 package de.jlus.seriesdb.view
 
-import javafx.scene.control.TabPane
+import de.jlus.seriesdb.app.*
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
@@ -30,9 +30,9 @@ class WelcomeTab : MainTab("Welcome") {
             fitHeight = 200.0
         }
 
-        text("\n\nVersion: 0.0.1\n" +
-                "Compatible with DAPI protocol: 0.0.1\n" +
-                "Compatible with TM protocol: 0.0.1\n\n") {
+        text("\n\nVersion: $thisVersion\n" +
+                "Compatible with DAPI protocol: $dapiVersion\n" +
+                "Compatible with TM protocol: $tmVersion\n\n") {
             font = Font(12.0)
             style {
                 fontStyle = FontPosture.ITALIC
@@ -56,16 +56,4 @@ class WelcomeTab : MainTab("Welcome") {
     init {
         tab.content = root
     }
-}
-
-
-/**
- * Helper function for building
- */
-fun TabPane.welcomeTab(f: WelcomeTab.() -> Unit = {}): WelcomeTab {
-    val newTab = WelcomeTab()
-    tabs.add(newTab.tab)
-    newTab.f()
-    newTab.tab.select()
-    return newTab
 }

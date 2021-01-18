@@ -2,38 +2,48 @@ package de.jlus.seriesdb.view
 
 import com.sun.javafx.collections.ObservableListWrapper
 import de.jlus.seriesdb.app.*
+import de.jlus.seriesdb.controller.MainController
 import javafx.beans.property.*
 import javafx.geometry.Side
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.layout.Priority
 import javafx.scene.paint.Paint
+import javafx.stage.Modality
 import tornadofx.*
 import tornadofx.controlsfx.*
+import java.io.File
 
 
 /**
  * Generates the main window
  */
 class MainView : View("Preliminary HERMESS SPU Interface software") {
-    val statusText = SimpleStringProperty("Not connected")
-    val progressValue = SimpleDoubleProperty(0.0)
-    val tabPane = TabPane()
-    val dapiConnected = SimpleBooleanProperty(false)
-    val tmConnected = SimpleBooleanProperty(false)
+    private val controller: MainController by inject()
+
+    private val statusText = SimpleStringProperty("Not connected")
+    private val progressValue = SimpleDoubleProperty(0.0)
+    private val tabPane = TabPane()
 
 
     override val root = borderpane {
         top = menubar {
-            menu("File") {
+            menu("Project") {
+                item("New project").action(::newProjectDialog)
                 item("Open project")
-                item("Reload project") {
-                    disableProperty().set(true)
-                }
                 item("Close project") {
-                    disableProperty().set(true)
+                    disableWhen(controller.projectViewModel.isDummy)
                 }
-                item("Save project")
-                item("Save As project")
+                item("Reload project") {
+                    disableWhen(controller.projectViewModel.isDummy)
+                }
+                separator()
+                item("Save project") {
+                    disableWhen(controller.projectViewModel.isDummy)
+                }
+                item("Save As project") {
+                    disableWhen(controller.projectViewModel.isDummy)
+                }
                 separator()
                 item("Application settings")
                 separator()
@@ -42,36 +52,36 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
 
             menu("SPU Interfacing") {
                 menu("DAPI: Connect") {
-                    disableWhen(dapiConnected)
+                    disableWhen(controller.dapiConnected)
                     item("Reload ports")
                     separator()
                 }
                 item("DAPI: Disconnect") {
-                    enableWhen(dapiConnected)
+                    enableWhen(controller.dapiConnected)
                 }
                 item("DAPI: Configure") {
-                    enableWhen(dapiConnected)
+                    enableWhen(controller.dapiConnected)
                 }
                 item("DAPI: Readout") {
-                    enableWhen(dapiConnected)
+                    enableWhen(controller.dapiConnected)
                 }
                 separator()
                 menu("TM: Connect") {
-                    disableWhen(tmConnected)
+                    disableWhen(controller.tmConnected)
                     item("Reload ports")
                     separator()
                 }
                 item("TM: Disconnect") {
-                    enableWhen(tmConnected)
+                    enableWhen(controller.tmConnected)
                 }
                 item("TM: Life view") {
-                    enableWhen(tmConnected)
+                    enableWhen(controller.tmConnected)
                 }
             }
 
             menu("About") {
                 item("About this application") {
-                    action { tabPane.welcomeTab() }
+                    action { tabPane.mainTab(::WelcomeTab) }
                 }
                 separator()
                 item("HERMESS Website") {
@@ -87,7 +97,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     // TODO link to TM spec
                 }
                 separator()
-                item("V. 0.0.1") {
+                item("V. $thisVersion") {
                     disableProperty().set(true)
                 }
             }
@@ -145,18 +155,85 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 minWidth = 500.0
                 tabClosingPolicy = TabPane.TabClosingPolicy.ALL_TABS
                 tabDragPolicy = TabPane.TabDragPolicy.REORDER
-                welcomeTab()
+                mainTab(::WelcomeTab)
             })
 
         }
 
         bottom = statusbar(statusText, progressValue) {}
     }
+
+
+    /**
+     * Opens a dialog for a new project
+     */
+    fun newProjectDialog () {
+        dialog("New Project", Modality.APPLICATION_MODAL) {
+            setPrefSize(500.0, 150.0)
+            val name = SimpleStringProperty()
+            val location = SimpleObjectProperty(File(System.getProperty("user.home")))
+            gridpane {
+                hgap = 12.0
+                vgap = 12.0
+                row {
+                    label("A new directory containing the project files will be generated.") {
+                        gridpaneConstraints {
+                            columnSpan = 3
+                        }
+                    }
+                }
+                row {
+                    label("New Project name: ")
+                    textfield(name) {
+                        gridpaneConstraints {
+                            columnSpan = 2
+                        }
+                    }
+                }
+                row {
+                    label("Location: ")
+                    label(location.value.toString()) {
+                        location.onChange {
+                            text = it.toString()
+                        }
+                        gridpaneConstraints {
+                            hGrow = Priority.ALWAYS
+                        }
+                    }
+                    button(graphic = ImageView("imgs/icon-directory-20.png")).action {
+                        location.value = chooseDirectory(
+                                "Select parent directory for new project",
+                                location.value
+                        )
+                    }
+                }
+                row {
+                    button("Create project") {
+                        isDefaultButton = true
+                        action {
+                            val finalName = name.value ?: ""
+                            val finalLocation = location.value
+                            if (!finalName.matches(regexProjectName))
+                                error("Name must match $regexProjectName")
+                            else if (finalLocation == null || !finalLocation.isDirectory || !finalLocation.exists())
+                                error("Location must be set to a directory")
+                            else {
+                                controller.createNewProject(finalName, finalLocation)
+                                close()
+                            }
+                        }
+                    }
+                    button("Cancel").action(::close)
+                }
+            }
+        }
+    }
 }
 
 
 /**
  * Represents a single item in the TreeView on the left side
+ * TODO remove all this shit
  */
 class ProjectOverviewItem(descriptor: String) {
     val descriptor = SimpleStringProperty(descriptor)
@@ -171,10 +248,6 @@ class ProjectOverviewItem(descriptor: String) {
         item.f()
         children.add(item)
         return item
-    }
-
-    fun onOpen() {
-        println("Opened" + descriptor.value)
     }
 }
 

@@ -28,4 +28,5 @@ Supports telemetry (TM) protocol 0.0.1
 
 
 ## Credits
-- Jerry Low for the [rocket-icon](https://www.iconfinder.com/jerrylow) of this application
+- [Jerry Low](https://www.iconfinder.com/jerrylow) for the rocket-icon of this application
+- [Wishforge Games](https://www.iconfinder.com/bitfreak86) for most of the icons used in this application

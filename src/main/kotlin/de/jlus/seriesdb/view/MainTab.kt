@@ -1,5 +1,6 @@
 package de.jlus.seriesdb.view
 
+import javafx.scene.Parent
 import javafx.scene.control.Tab
 import tornadofx.Fragment
 

@@ -3,10 +3,10 @@ package de.jlus.seriesdb.view
 import com.sun.javafx.collections.ObservableListWrapper
 import de.jlus.seriesdb.app.*
 import javafx.beans.property.*
+import javafx.geometry.Side
 import javafx.scene.control.*
-import javafx.scene.input.KeyCode
+import javafx.scene.image.ImageView
 import javafx.scene.paint.Paint
-import javafx.scene.text.Font
 import tornadofx.*
 import tornadofx.controlsfx.*
 
@@ -20,7 +20,6 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
     val tabPane = TabPane()
     val dapiConnected = SimpleBooleanProperty(false)
     val tmConnected = SimpleBooleanProperty(false)
-    val projectTree = TreeView(TreeItem(tree))
 
 
     override val root = borderpane {
@@ -101,28 +100,45 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
             }
 
             // the left menu
-            add(projectTree.apply {
+            drawer {
                 minWidth = 200.0
-                root.isExpanded = true
-
-                cellFormat {
-                    textFillProperty().bind(it.fillColor)
-                    textProperty().bind(it.descriptor)
-                    font = Font(14.0)
-                    onDoubleClick(it::onOpen)
-                    setOnKeyPressed { event ->
-                        if (event.code == KeyCode.ENTER) it.onOpen()
+                dockingSide = Side.LEFT
+                multiselect = true
+                item("Project config", ImageView("imgs/icon-config-20.png"), true) {
+                    form {
+                        fieldset("Projects name") {
+                            field("Name:") {
+                                label("Example project") {
+                                    isWrapText = true
+                                }
+                            }
+                            field("Location:") {
+                                label("C://Benutzer/Jonathan/Desktop/anotherPath/test/undoweite/esGehtLange") {
+                                    isWrapText = true
+                                }
+                            }
+                            field("Description:") {
+                                label("Hier kann ein längerer Text stehen und so weiter.. Es ist alles denkbar...")
+                            }
+                        }
+                        button("Edit")
                     }
                 }
-
-                populate({ // how to generate the TreeItem
-                    val ti = TreeItem(it)
-                    ti.isExpanded = true
-                    ti
-                }) { // how to find new children
-                    it.value.children
+                item("SPU configs", ImageView("imgs/icon-spu-20.png"), true) {
+                    listview(tree.children) {
+                        cellFormat {
+                            textProperty().bind(it.descriptor)
+                        }
+                    }
                 }
-            })
+                item("Measurements", ImageView("imgs/icon-measurement-20.png"), true) {
+                    listview(tree.children) {
+                        cellFormat {
+                            textProperty().bind(it.descriptor)
+                        }
+                    }
+                }
+            }
 
             // the main space with the TabPane
             add(tabPane.apply {
@@ -150,14 +166,14 @@ class ProjectOverviewItem(descriptor: String) {
     /**
      * create ProjectOverviewItem and add to this children
      */
-    fun item (descriptor: String, f: ProjectOverviewItem.() -> Unit = {}): ProjectOverviewItem {
+    fun item(descriptor: String, f: ProjectOverviewItem.() -> Unit = {}): ProjectOverviewItem {
         val item = ProjectOverviewItem(descriptor)
         item.f()
         children.add(item)
         return item
     }
 
-    fun onOpen () {
+    fun onOpen() {
         println("Opened" + descriptor.value)
     }
 }

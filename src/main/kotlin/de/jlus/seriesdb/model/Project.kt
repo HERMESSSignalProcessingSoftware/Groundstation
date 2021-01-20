@@ -11,22 +11,19 @@ import javax.json.JsonObject
 
 /**
  * A Project file and thus this model contains only basic text information
- * @param isDummy can only be set upon initialization. If set to true, no actions on this model are permitted and
- * the view should regard this project as "no project loaded"
- * @param initFile When provided, the model will load the file. Make sure to only pass a sanitized file, otherwise
- * undefined behavior may occur.
+ * @param initFile When provided, the model will load the file
  */
-class Project(val isDummy: Boolean = true, initFile: File = File("")): JsonModel {
-    val nameProperty = SimpleStringProperty("")
+class Project(initFile: File? = null): JsonModel {
+    val nameProperty = SimpleStringProperty("NO NAME SET")
     var name: String by nameProperty
-    val descriptionProperty = SimpleStringProperty("")
+    val descriptionProperty = SimpleStringProperty("NO DESCRIPTION SET")
     var description: String by descriptionProperty
-    val fileProperty = SimpleObjectProperty(initFile)
-    var file: File by fileProperty
+    val fileProperty = SimpleObjectProperty<File>(initFile)
+    var file: File? by fileProperty
 
 
     init {
-        if (!isDummy && initFile.isFile && initFile.exists())
+        if (initFile != null)
             readFromFile()
     }
 
@@ -36,14 +33,16 @@ class Project(val isDummy: Boolean = true, initFile: File = File("")): JsonModel
      * @throws IOException in case anything does not work
      */
     fun saveToFile () {
-        if (!isValidFilePath(false))
-            throw IOException("Filepath is not valid for a hermess project file: $file")
+        val f = file
+        if (!isValidFilePath(f, false))
+            throw IOException("Filepath is not valid for a hermess project file: $f")
+        f!! // was assured in isValidFilePath
         // make new directory, if not exists
-        file.parentFile?.mkdirs()
-        if (!file.canWrite() && file.exists())
-            throw IOException("Can not write to file: $file")
+        f.parentFile?.mkdirs()
+        if (!f.canWrite() && f.exists())
+            throw IOException("Can not write to file: $f")
         // generate the JSON string
-        file.writeText(JsonBuilder().add("project", this).build().toPrettyString())
+        f.writeText(JsonBuilder().add("project", this).build().toPrettyString())
     }
 
 
@@ -52,23 +51,27 @@ class Project(val isDummy: Boolean = true, initFile: File = File("")): JsonModel
      * @throws IOException in case anything does not work
      */
     fun readFromFile () {
-        if (!isValidFilePath(true))
-            throw IOException("Filepath is not valid for a hermess project file: $file")
-        if (!file.canRead())
-            throw IOException("Can not read file: $file")
-        updateModel(loadJsonObject(file.toPath()).getJsonObject("project"))
+        val f = file
+        if (!isValidFilePath(f, true))
+            throw IOException("Filepath is not valid for a hermess project file: $f")
+        f!! // was assured in isValidFilePath
+        if (!f.canRead())
+            throw IOException("Can not read file: $f")
+        updateModel(loadJsonObject(f.toPath()).getJsonObject("project"))
     }
 
 
     /**
      * Checks, if the file path is consistent with the rules for projects
      */
-    private fun isValidFilePath (mustExist: Boolean): Boolean {
-        val parent = file.parentFile ?: File("")
-        if (file.extension != "herpro" || file.nameWithoutExtension != parent.name
+    private fun isValidFilePath (f: File?, mustExist: Boolean): Boolean {
+        if (f == null)
+            return false
+        val parent = f.parentFile ?: File("")
+        if (f.extension != "herpro" || f.nameWithoutExtension != parent.name
                 || !parent.name.matches(regexProjectName))
             return false
-        if (mustExist && (!file.isFile || !parent.isDirectory))
+        if (mustExist && (!f.isFile || !parent.isDirectory))
             return false
         return true
     }

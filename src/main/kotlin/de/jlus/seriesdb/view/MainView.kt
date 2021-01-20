@@ -2,13 +2,16 @@ package de.jlus.seriesdb.view
 
 import com.sun.javafx.collections.ObservableListWrapper
 import de.jlus.seriesdb.app.*
-import de.jlus.seriesdb.controller.MainController
+import de.jlus.seriesdb.viewmodel.DapiViewModel
+import de.jlus.seriesdb.viewmodel.ProjectViewModel
+import de.jlus.seriesdb.viewmodel.TmViewModel
 import javafx.beans.property.*
 import javafx.geometry.Side
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Paint
+import javafx.stage.FileChooser
 import javafx.stage.Modality
 import tornadofx.*
 import tornadofx.controlsfx.*
@@ -19,7 +22,9 @@ import java.io.File
  * Generates the main window
  */
 class MainView : View("Preliminary HERMESS SPU Interface software") {
-    private val controller: MainController by inject()
+    private val projectVm = ProjectViewModel()
+    private val dapiVm = DapiViewModel()
+    private val tmVm = TmViewModel()
 
     private val statusText = SimpleStringProperty("Not connected")
     private val progressValue = SimpleDoubleProperty(0.0)
@@ -29,53 +34,54 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
     override val root = borderpane {
         top = menubar {
             menu("Project") {
-                item("New project").action(::newProjectDialog)
-                item("Open project")
+                item("Open project").action(::openProject)
                 item("Close project") {
-                    disableWhen(controller.projectViewModel.isDummy)
+                    action(projectVm::closeProject)
                 }
                 item("Reload project") {
-                    disableWhen(controller.projectViewModel.isDummy)
+                    enableWhen(projectVm.isOpened)
+                    action(projectVm::reloadProject)
                 }
                 separator()
-                item("Save project") {
-                    disableWhen(controller.projectViewModel.isDummy)
-                }
+                item("Save project").action(::saveProject)
                 item("Save As project") {
-                    disableWhen(controller.projectViewModel.isDummy)
+                    enableWhen(projectVm.isOpened)
+                    action(::saveProjectAs)
                 }
                 separator()
                 item("Application settings")
                 separator()
-                item("Exit application")
+                item("Exit application").action {
+                    currentStage?.close()
+                }
             }
 
             menu("SPU Interfacing") {
                 menu("DAPI: Connect") {
-                    disableWhen(controller.dapiConnected)
+                    enableWhen(dapiVm.itemProperty.isNull)
                     item("Reload ports")
                     separator()
                 }
                 item("DAPI: Disconnect") {
-                    enableWhen(controller.dapiConnected)
+                    disableWhen(dapiVm.itemProperty.isNull)
                 }
                 item("DAPI: Configure") {
-                    enableWhen(controller.dapiConnected)
+                    disableWhen(dapiVm.itemProperty.isNull)
                 }
                 item("DAPI: Readout") {
-                    enableWhen(controller.dapiConnected)
+                    disableWhen(dapiVm.itemProperty.isNull)
                 }
                 separator()
                 menu("TM: Connect") {
-                    disableWhen(controller.tmConnected)
+                    enableWhen(tmVm.itemProperty.isNull)
                     item("Reload ports")
                     separator()
                 }
                 item("TM: Disconnect") {
-                    enableWhen(controller.tmConnected)
+                    disableWhen(tmVm.itemProperty.isNull)
                 }
                 item("TM: Life view") {
-                    enableWhen(controller.tmConnected)
+                    disableWhen(tmVm.itemProperty.isNull)
                 }
             }
 
@@ -116,22 +122,32 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 multiselect = true
                 item("Project config", ImageView("imgs/icon-config-20.png"), true) {
                     form {
-                        fieldset("Projects name") {
+                        fieldset("Project configuration") {
                             field("Name:") {
-                                label("Example project") {
-                                    isWrapText = true
-                                }
+                                label(projectVm.name)
                             }
                             field("Location:") {
-                                label("C://Benutzer/Jonathan/Desktop/anotherPath/test/undoweite/esGehtLange") {
-                                    isWrapText = true
+                                val locationButton = button(graphic=ImageView(imgDirectory20)) {
+                                    enableWhen(projectVm.isOpened)
+                                }
+                                val locationLabel = label("UNSAVED PROJECT") {
+                                    hgrow = Priority.ALWAYS
+                                }
+                                projectVm.file.onChange {
+                                    val loc = it?.parent
+                                    locationLabel.text = loc ?: "UNSAVED PROJECT"
+                                    if (loc == null)
+                                        return@onChange
+                                    locationButton.action {
+                                        hostServices.showDocument(loc)
+                                    }
                                 }
                             }
-                            field("Description:") {
-                                label("Hier kann ein längerer Text stehen und so weiter.. Es ist alles denkbar...")
-                            }
                         }
-                        button("Edit")
+                        buttonbar {
+                            button("More")
+                            button("Edit")
+                        }
                     }
                 }
                 item("SPU configs", ImageView("imgs/icon-spu-20.png"), true) {
@@ -164,10 +180,44 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
     }
 
 
+    init {
+        shortcut("Ctrl+O", ::openProject)
+        shortcut("Ctrl+S", ::saveProject)
+        shortcut("Ctrl+Shift+S", ::saveProjectAs)
+    }
+
+
+    /**
+     * open a dialog for requesting the open project
+     */
+    private fun openProject () {
+        val selection = chooseFile(
+                "Select the project file to open",
+                arrayOf(FileChooser.ExtensionFilter("HERMESS project file", "*.herpro")),
+                File(System.getProperty("user.home")),
+                FileChooserMode.Single,
+                currentWindow
+        )
+        if (selection.size == 1)
+            projectVm.openProject(selection[0])
+    }
+
+
+    /**
+     * Save the project either in bg or request for a new path
+     */
+    private fun saveProject () {
+        if (projectVm.isOpened.value)
+            projectVm.saveProject()
+        else
+            saveProjectAs()
+    }
+
+
     /**
      * Opens a dialog for a new project
      */
-    fun newProjectDialog () {
+    private fun saveProjectAs () {
         dialog("New Project", Modality.APPLICATION_MODAL) {
             setPrefSize(500.0, 150.0)
             val name = SimpleStringProperty()
@@ -200,7 +250,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                             hGrow = Priority.ALWAYS
                         }
                     }
-                    button(graphic = ImageView("imgs/icon-directory-20.png")).action {
+                    button(graphic = ImageView(imgDirectory20)).action {
                         location.value = chooseDirectory(
                                 "Select parent directory for new project",
                                 location.value
@@ -218,7 +268,8 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                             else if (finalLocation == null || !finalLocation.isDirectory || !finalLocation.exists())
                                 error("Location must be set to a directory")
                             else {
-                                controller.createNewProject(finalName, finalLocation)
+                                projectVm.name.set(finalName)
+                                projectVm.saveProjectAs(finalLocation.resolve("$finalName/$finalName.herpro"))
                                 close()
                             }
                         }

@@ -1,6 +1,8 @@
 package de.jlus.seriesdb.viewmodel
 
 import de.jlus.seriesdb.model.*
+import de.jlus.seriesdb.view.MainTab
+import javafx.beans.binding.Binding
 import javafx.beans.binding.BooleanBinding
 import javafx.scene.control.ButtonType
 import tornadofx.*
@@ -15,6 +17,7 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
     val name = bind(Project::nameProperty) // TODO Add validators for all fields
     val description = bind(Project::descriptionProperty)
     val file = bind(Project::fileProperty)
+    val directory: Binding<File?> = file.objectBinding { it?.parentFile }
     val isOpened: BooleanBinding = file.isNotNull
 
 
@@ -34,7 +37,11 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
             warning("Could not save file", e.message)
             return false
         }
-        // TODO save all project related tabs
+        // now safe all tabs
+        for (tab in MainTab.allOpenTabs) {
+            if (!tab.onProjectSave())
+                return false
+        }
         return true
     }
 
@@ -82,8 +89,8 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
      * @return true, if close operation succeeded
      */
     fun closeProject (): Boolean {
-        if (!isOpened.value) return true
-        if (isDirty) {
+        // ask if it should save the dirty model
+        if (isDirty || MainTab.allOpenTabs.any { it.isProjectDirty.value }) {
             information(
                     "Project is not saved",
                     "Would you like to save all pending changes before closing?",
@@ -95,7 +102,14 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
                     return false // just dont close the project
             }
         }
-        // TODO close all other tabs
+
+        // check all tabs, if they can be closed
+        for (tab in MainTab.allOpenTabs.toList()) {
+            if (!tab.onProjectClose())
+                return false
+        }
+
+        // actually closing the project
         item = Project()
         return true
     }

@@ -2,9 +2,8 @@ package de.jlus.seriesdb.view
 
 import com.sun.javafx.collections.ObservableListWrapper
 import de.jlus.seriesdb.app.*
-import de.jlus.seriesdb.viewmodel.DapiViewModel
-import de.jlus.seriesdb.viewmodel.ProjectViewModel
-import de.jlus.seriesdb.viewmodel.TmViewModel
+import de.jlus.seriesdb.view.MainTab.Companion.findByTabId
+import de.jlus.seriesdb.viewmodel.*
 import javafx.beans.property.*
 import javafx.geometry.Side
 import javafx.scene.control.*
@@ -22,7 +21,7 @@ import java.io.File
  * Generates the main window
  */
 class MainView : View("Preliminary HERMESS SPU Interface software") {
-    private val projectVm = ProjectViewModel()
+    private val projectVm by inject<ProjectViewModel>()
     private val dapiVm = DapiViewModel()
     private val tmVm = TmViewModel()
 
@@ -87,7 +86,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
 
             menu("About") {
                 item("About this application") {
-                    action { tabPane.mainTab(::WelcomeTab) }
+                    action { openMainTab(::WelcomeTab, "welcome") }
                 }
                 separator()
                 item("HERMESS Website") {
@@ -111,7 +110,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
 
         center = splitpane {
             // after window was initialized, but the separator in a nice position
-            subscribe<WindowFirstShow> {
+            subscribe<WindowWasMaximized> {
                 this@splitpane.setDividerPosition(0, 0.2)
             }
 
@@ -146,7 +145,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                         }
                         buttonbar {
                             button("More")
-                            button("Edit")
+                            button("Edit").action { openMainTab(::EditProjectTab, tabIdEditProject) }
                         }
                     }
                 }
@@ -171,7 +170,9 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 minWidth = 500.0
                 tabClosingPolicy = TabPane.TabClosingPolicy.ALL_TABS
                 tabDragPolicy = TabPane.TabDragPolicy.REORDER
-                mainTab(::WelcomeTab)
+                openMainTab(::WelcomeTab, "welcome") {
+                    tab.isClosable = false
+                }
             })
 
         }
@@ -215,10 +216,10 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
 
 
     /**
-     * Opens a dialog for a new project
+     * Opens a dialog for saving a project
      */
     private fun saveProjectAs () {
-        dialog("New Project", Modality.APPLICATION_MODAL) {
+        dialog("Save Project", Modality.APPLICATION_MODAL) {
             setPrefSize(500.0, 150.0)
             val name = SimpleStringProperty()
             val location = SimpleObjectProperty(File(System.getProperty("user.home")))
@@ -278,6 +279,36 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 }
             }
         }
+    }
+
+
+
+    /**
+     * Helper function for creation of new MainTab
+     * @param constructor You can pass a constructor as a lambda like ::MyMainTabClass
+     * @param tabId the ID associated with a tab. If not null, it will try to open any associated tab
+     * with that id. Could it not found such a tab, the newly created tab will have this tabId.
+     * @param f the builder function. Only applied, if a new instance was created
+     */
+    private inline fun <reified T: MainTab> openMainTab (
+            constructor: () -> T,
+            tabId: String? = null,
+            f: T.() -> Unit = {}
+    ): T {
+        // check, if tab with its id is already open
+        val openTab = findByTabId<T>(tabId)
+        if (openTab != null) {
+            openTab.tab.select()
+            return openTab
+        }
+
+        val newTab = constructor()
+        tabPane.tabs.add(newTab.tab)
+        newTab.tabId = tabId
+        newTab.lateinit()
+        newTab.f()
+        newTab.tab.select()
+        return newTab
     }
 }
 

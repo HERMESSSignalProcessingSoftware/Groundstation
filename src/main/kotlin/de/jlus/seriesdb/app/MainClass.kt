@@ -11,7 +11,7 @@ import tornadofx.*
  * Start the application
  */
 class MainClass: App(MainView::class, Styles::class) {
-    val projectVm by inject<ProjectViewModel>()
+    private val projectVm by inject<ProjectViewModel>()
 
 
     override fun start(stage: Stage) {
@@ -19,7 +19,11 @@ class MainClass: App(MainView::class, Styles::class) {
         setStageIcon(Image("imgs/icon.png"))
 
         stage.showingProperty().onChangeOnce {
-            fire(WindowFirstShow)
+            fire(WindowWasMaximized)
+        }
+        stage.maximizedProperty().onChange {
+            if (it)
+                fire(WindowWasMaximized)
         }
 
         stage.setOnCloseRequest {
@@ -28,7 +32,8 @@ class MainClass: App(MainView::class, Styles::class) {
                 confirm("Are you sure you want to exit?", "Not all changes were saved!") {
                     stage.close()
                 }
-            stage.close()
+            else
+                stage.close()
         }
 
 

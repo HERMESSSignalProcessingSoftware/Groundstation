@@ -53,7 +53,9 @@ class WelcomeTab : MainTab("Welcome") {
 
     }
 
-    init {
-        tab.content = root
-    }
+
+    /**
+     * Ignore the closing of a project
+     */
+    override fun onProjectClose(): Boolean = true
 }

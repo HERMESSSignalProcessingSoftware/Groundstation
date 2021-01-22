@@ -1,24 +1,30 @@
 package de.jlus.seriesdb.view
 
-import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.BooleanProperty
+import javafx.scene.control.ButtonType
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import tornadofx.Fragment
+import tornadofx.information
 import tornadofx.onChange
 
 
 /**
- * Extend this to be shown in a MainTab
- * To initiate an instance prefer using the builder function MainView::openMainTab
- * After creation lateinit should be called
+ * Extend this to be shown in a MainTab<br>
+ * To initiate an instance prefer using the builder function MainView::openMainTab<br>
+ * After creation lateinit should be called<br>
+ * The default configuration for this tab is a ProjectTab, which will close (and save) itself with the project.
+ * If you want to override this behavior, override onProjectClose and onProjectSave with "= true"
  * @param title The title to show in the tab bar
  * @param initialTabId If null, no ID is associated
  */
 abstract class MainTab(title: String, initialTabId: String? = null) : Fragment() {
     var tab = Tab(title)
-    val isProjectDirty = SimpleBooleanProperty(false)
-    var tabTitle: String = title
-        set(value) { field = value; tab.text = value }
+    abstract var isProjectTab: Boolean
+    abstract val isDirty: BooleanProperty
+    var tabTitle: String
+        set(value) { tab.text = value  }
+        get() = tab.text ?: ""
     var tabId: String? = initialTabId
         set(value) {
             // check if the ID exists already and does not allow the ID to be renamed
@@ -36,7 +42,10 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
      * If tab can not save, make sure to inform the user by triggering an error window
      * @return true, if saving succeeded
      */
-    open fun saveResource(): Boolean = true
+    open fun saveResource(): Boolean {
+        isDirty.value = false
+        return true
+    }
 
 
     /**
@@ -44,33 +53,60 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
      * If tab can not save, make sure to inform the user by triggering an error window
      * @return true, if saving succeeded
      */
-    open fun onProjectSave(): Boolean = saveResource()
-
-
-    /**
-     * Performs the close tab operation, when the superior project is closing
-     * @return true, if allow to be closed
-     */
-    open fun onProjectClose(): Boolean {
-        if (closeResource()) {
-            mainTabPane?.tabs?.remove(tab)
-            allOpenTabs.remove(this)
-            return true
-        }
-        return false
+    open fun onProjectSave(): Boolean {
+        if (isProjectTab)
+            return saveResource()
+        return true
     }
 
 
     /**
-     * Performs the close tab operation
+     * Performs the close tab operation, when the superior project is closing.
+     * If it is a project related tab, prefer closing the tab, when the
+     * resource was successfully closed.
+     * @return true, if allow to be closed
+     */
+    open fun onProjectClose(): Boolean {
+        if (isProjectTab) {
+            if (!closeResource())
+                return false
+            closeTab()
+        }
+        return true
+    }
+
+
+    /**
+     * Performs the close operation for the resource.
      * If tab can not close, make sure to inform the user by triggering an error window.
      * @return true, if allow to be closed
      */
     open fun closeResource(): Boolean {
-        if (saveResource())
-            return true
-        tornadofx.error("Could not save resource")
-        return false
+        if (isDirty.value) {
+            information(
+                "The tab '$tabTitle' contains unsaved changes",
+                "Do you want to save them now?",
+                ButtonType.YES, ButtonType.NO, ButtonType.CANCEL
+            ) {
+                if (it == ButtonType.YES && !saveResource()) {
+                    tornadofx.error("Could not save content of tab '$tabTitle'.")
+                    return false
+                }
+                else if (it == ButtonType.CANCEL)
+                    return false
+            }
+        }
+        return true
+    }
+
+
+    /**
+     * Close the tab, without calling any handlers.
+     * This does not close the resource
+     */
+    fun closeTab() {
+        mainTabPane?.tabs?.remove(tab)
+        allOpenTabs.remove(this)
     }
 
 

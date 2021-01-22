@@ -132,20 +132,21 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                                 val locationLabel = label("UNSAVED PROJECT") {
                                     hgrow = Priority.ALWAYS
                                 }
-                                projectVm.file.onChange {
-                                    val loc = it?.parent
-                                    locationLabel.text = loc ?: "UNSAVED PROJECT"
-                                    if (loc == null)
+                                projectVm.directory.onChange {
+                                    locationLabel.text = it?.absolutePath ?: "UNSAVED PROJECT"
+                                    if (it == null)
                                         return@onChange
                                     locationButton.action {
-                                        hostServices.showDocument(loc)
+                                        hostServices.showDocument(it.absolutePath)
                                     }
                                 }
                             }
                         }
                         buttonbar {
-                            button("More")
-                            button("Edit").action { openMainTab(::EditProjectTab, tabIdEditProject) }
+                            button("Description") {
+                                enableWhen(projectVm.isOpened)
+                                action { openMainTab(::EditProjectTab, tabIdEditProject) }
+                            }
                         }
                     }
                 }

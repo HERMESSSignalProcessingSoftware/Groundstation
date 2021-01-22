@@ -37,7 +37,7 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
             warning("Could not save file", e.message)
             return false
         }
-        // now safe all tabs
+        // now save all tabs
         for (tab in MainTab.allOpenTabs) {
             if (!tab.onProjectSave())
                 return false
@@ -90,7 +90,7 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
      */
     fun closeProject (): Boolean {
         // ask if it should save the dirty model
-        if (isDirty || MainTab.allOpenTabs.any { it.isProjectDirty.value }) {
+        if (isDirty || MainTab.allOpenTabs.any { it.isProjectTab && it.isDirty.value }) {
             information(
                     "Project is not saved",
                     "Would you like to save all pending changes before closing?",

@@ -1,28 +1,45 @@
 package de.jlus.seriesdb.view
 
+import de.jlus.seriesdb.viewmodel.ProjectViewModel
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.scene.web.HTMLEditor
 import tornadofx.*
 
 
 /**
  *
  */
-class EditProjectTab : MainTab("Edit Project") {
-    override fun saveResource(): Boolean { println("Saved"); return true }
+class EditProjectTab : MainTab("Project description") {
+    override var isProjectTab = true
+    override val isDirty = SimpleBooleanProperty(false)
+
+    private val projectVM by inject<ProjectViewModel>()
+    private lateinit var htmlBox: HTMLEditor
 
 
-    override fun closeResource(): Boolean {
-        confirm("Really close") {
-            return super.closeResource()
+    override val root = vbox {
+        spacing = 12.0
+        htmlBox = htmleditor {
+            htmlText = projectVM.description.value
+            setOnKeyReleased {
+                // mark this tab dirty, if the editor lost focus and has changed
+                if (!isDirty.value && htmlText != projectVM.description.value)
+                    isDirty.value = true
+            }
         }
-        return false
-    }
-
-
-    override val root = form {
-        fieldset("Test") {
-            field("Test") {
-                textfield()
+        buttonbar {
+            button("Save").action(::saveResource)
+            button("Reset").action {
+                htmlBox.htmlText = projectVM.description.value
             }
         }
     }
+
+
+    override fun saveResource(): Boolean {
+        projectVM.description.value = htmlBox.htmlText
+        isDirty.value = false
+        return projectVM.commit()
+    }
+    override fun onProjectSave(): Boolean = true // will be saved anyway by project
 }

@@ -1,6 +1,7 @@
 package de.jlus.seriesdb.view
 
 import de.jlus.seriesdb.app.*
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
 import javafx.scene.text.Font
@@ -12,6 +13,10 @@ import tornadofx.*
  * Displays a welcome message with about information
  */
 class WelcomeTab : MainTab("Welcome") {
+    override var isProjectTab = false
+    override val isDirty = SimpleBooleanProperty(false)
+
+
     override val root = textflow {
         paddingAll = 12
 
@@ -52,10 +57,4 @@ class WelcomeTab : MainTab("Welcome") {
         }
 
     }
-
-
-    /**
-     * Ignore the closing of a project
-     */
-    override fun onProjectClose(): Boolean = true
 }

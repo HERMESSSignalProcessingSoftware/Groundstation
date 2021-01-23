@@ -1,4 +1,4 @@
-package de.jlus.seriesdb.app
+package de.jlus.hermessgui.app
 
 import javafx.scene.image.Image
 

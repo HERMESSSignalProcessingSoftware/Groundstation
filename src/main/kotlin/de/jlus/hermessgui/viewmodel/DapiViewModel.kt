@@ -1,4 +1,4 @@
-package de.jlus.seriesdb.viewmodel
+package de.jlus.hermessgui.viewmodel
 
 import tornadofx.ItemViewModel
 

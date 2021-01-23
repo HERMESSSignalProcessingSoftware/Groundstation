@@ -28,6 +28,16 @@ Supports telemetry (TM) protocol 0.0.1
 - [ ] Life preview of measurements and status
 
 
+## Usage
+### Compilation and packaging
+This software uses maven for compilation and packaging:  
+`mvn clean compile assembly:single`
+
+### Execution
+Use the jre of [OpenJDK 14](https://openjdk.java.net/):  
+`java -jar target/hermessGui-1.0-jar-with-dependencies.jar`
+
+
 ## Credits
 - [Jerry Low](https://www.iconfinder.com/jerrylow) for the rocket-icon of this application
 - [Wishforge Games](https://www.iconfinder.com/bitfreak86) for most of the icons used in this application

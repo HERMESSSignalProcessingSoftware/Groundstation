@@ -1,7 +1,7 @@
-package de.jlus.seriesdb.viewmodel
+package de.jlus.hermessgui.viewmodel
 
-import de.jlus.seriesdb.model.*
-import de.jlus.seriesdb.view.MainTab
+import de.jlus.hermessgui.model.*
+import de.jlus.hermessgui.view.MainTab
 import javafx.beans.binding.Binding
 import javafx.beans.binding.BooleanBinding
 import javafx.scene.control.ButtonType

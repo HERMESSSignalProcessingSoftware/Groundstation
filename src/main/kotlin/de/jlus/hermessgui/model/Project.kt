@@ -1,6 +1,6 @@
-package de.jlus.seriesdb.model
+package de.jlus.hermessgui.model
 
-import de.jlus.seriesdb.app.regexProjectName
+import de.jlus.hermessgui.app.regexProjectName
 import javafx.beans.property.*
 import tornadofx.JsonModel
 import tornadofx.*

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.jlus</groupId>
-    <artifactId>seriesDatabase</artifactId>
+    <artifactId>hermessGui</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 
@@ -13,7 +13,7 @@
         <kotlin.version>1.4.21</kotlin.version>
         <tornadofx.version>1.7.20</tornadofx.version>
         <openjfx.version>15.0.1</openjfx.version>
-        <main.class>de.jlus.seriesdb.app.MainClass</main.class>
+        <main.class>de.jlus.hermessgui.app.MainClassKt</main.class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -131,22 +131,22 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.6</version>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>${main.class}</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
                 <executions>
                     <execution>
                         <id>make-assembly</id>
                         <phase>package</phase>
                         <goals> <goal>single</goal> </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>${main.class}</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

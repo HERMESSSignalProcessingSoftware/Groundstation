@@ -1,9 +1,9 @@
-package de.jlus.seriesdb.view
+package de.jlus.hermessgui.view
 
 import com.sun.javafx.collections.ObservableListWrapper
-import de.jlus.seriesdb.app.*
-import de.jlus.seriesdb.view.MainTab.Companion.findByTabId
-import de.jlus.seriesdb.viewmodel.*
+import de.jlus.hermessgui.app.*
+import de.jlus.hermessgui.view.MainTab.Companion.findByTabId
+import de.jlus.hermessgui.viewmodel.*
 import javafx.beans.property.*
 import javafx.geometry.Side
 import javafx.scene.control.*

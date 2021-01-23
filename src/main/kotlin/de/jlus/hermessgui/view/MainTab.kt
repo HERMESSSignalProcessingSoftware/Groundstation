@@ -1,4 +1,4 @@
-package de.jlus.seriesdb.view
+package de.jlus.hermessgui.view
 
 import javafx.beans.property.BooleanProperty
 import javafx.scene.control.ButtonType

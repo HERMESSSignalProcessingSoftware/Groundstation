@@ -1,6 +1,6 @@
-package de.jlus.seriesdb.view
+package de.jlus.hermessgui.view
 
-import de.jlus.seriesdb.app.*
+import de.jlus.hermessgui.app.*
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.image.Image
 import javafx.scene.paint.Color

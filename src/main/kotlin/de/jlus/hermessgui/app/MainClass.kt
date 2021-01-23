@@ -1,7 +1,7 @@
-package de.jlus.seriesdb.app
+package de.jlus.hermessgui.app
 
-import de.jlus.seriesdb.view.MainView
-import de.jlus.seriesdb.viewmodel.*
+import de.jlus.hermessgui.view.MainView
+import de.jlus.hermessgui.viewmodel.*
 import javafx.scene.image.Image
 import javafx.stage.Stage
 import tornadofx.*

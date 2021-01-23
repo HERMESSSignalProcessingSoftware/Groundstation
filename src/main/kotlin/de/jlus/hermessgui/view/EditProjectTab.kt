@@ -1,6 +1,6 @@
-package de.jlus.seriesdb.view
+package de.jlus.hermessgui.view
 
-import de.jlus.seriesdb.viewmodel.ProjectViewModel
+import de.jlus.hermessgui.viewmodel.ProjectViewModel
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.web.HTMLEditor
 import tornadofx.*

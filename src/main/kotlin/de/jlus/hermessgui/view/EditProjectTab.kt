@@ -39,7 +39,6 @@ class EditProjectTab : MainTab("Project description") {
     override fun saveResource(): Boolean {
         projectVM.description.value = htmlBox.htmlText
         isDirty.value = false
-        return projectVM.commit()
+        return true
     }
-    override fun onProjectSave(): Boolean = true // will be saved anyway by project
 }

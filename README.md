@@ -31,7 +31,7 @@ Supports telemetry (TM) protocol 0.0.1
 ## Usage
 ### Compilation and packaging
 This software uses maven for compilation and packaging:  
-`mvn clean compile assembly:single`
+`mvn clean package`
 
 ### Execution
 Use the jre of [OpenJDK 14](https://openjdk.java.net/):  

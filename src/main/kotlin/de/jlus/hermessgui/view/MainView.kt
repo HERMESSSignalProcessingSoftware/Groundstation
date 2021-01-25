@@ -151,9 +151,16 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     }
                 }
                 item("SPU configs", ImageView("imgs/icon-spu-20.png"), true) {
-                    listview(tree.children) {
-                        cellFormat {
-                            textProperty().bind(it.descriptor)
+                    vbox {
+                        listview(tree.children) {
+                            cellFormat {
+                                textProperty().bind(it.descriptor)
+                            }
+                        }
+                        button("Add new configuration file", graphic = ImageView(imgAdd)) {
+                            fitToParentWidth()
+                            //enableWhen(projectVm.isOpened)
+                            action { openMainTab(::SPUConfigTab) }
                         }
                     }
                 }

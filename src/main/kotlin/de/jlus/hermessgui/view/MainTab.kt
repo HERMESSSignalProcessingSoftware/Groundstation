@@ -86,10 +86,11 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
             information(
                 "The tab '$tabTitle' contains unsaved changes",
                 "Do you want to save them now?",
-                ButtonType.YES, ButtonType.NO, ButtonType.CANCEL
+                ButtonType.YES, ButtonType.NO, ButtonType.CANCEL,
+                owner = currentWindow
             ) {
                 if (it == ButtonType.YES && !saveResource()) {
-                    tornadofx.error("Could not save content of tab '$tabTitle'.")
+                    tornadofx.error("Could not save content of tab '$tabTitle'.", owner=currentWindow)
                     return false
                 }
                 else if (it == ButtonType.CANCEL)

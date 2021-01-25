@@ -26,7 +26,12 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
      * @return true, if save operation succeeded
      */
     fun saveProject (): Boolean {
-        // First push all changes from this viewModel
+        // save all tabs first, in case they modify this model
+        for (tab in MainTab.allOpenTabs) {
+            if (!tab.onProjectSave())
+                return false
+        }
+        // push all changes from this viewModel
         if (!commit())
             return false
         // save to file if it works
@@ -36,11 +41,6 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
         catch (e: IOException) {
             warning("Could not save file", e.message)
             return false
-        }
-        // now save all tabs
-        for (tab in MainTab.allOpenTabs) {
-            if (!tab.onProjectSave())
-                return false
         }
         return true
     }

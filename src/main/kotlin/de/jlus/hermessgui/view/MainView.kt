@@ -48,8 +48,6 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     action(::saveProjectAs)
                 }
                 separator()
-                item("Application settings")
-                separator()
                 item("Exit application").action {
                     currentStage?.close()
                 }
@@ -68,6 +66,9 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     disableWhen(dapiVm.itemProperty.isNull)
                 }
                 item("DAPI: Readout") {
+                    disableWhen(dapiVm.itemProperty.isNull)
+                }
+                item("DAPI: ADC calibrations") {
                     disableWhen(dapiVm.itemProperty.isNull)
                 }
                 separator()

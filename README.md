@@ -19,6 +19,8 @@ Supports data-and-programming-interface (DAPI) protocol 0.0.1
 - [ ] Configure SPU
 - [ ] Read out and store measurements
 - [ ] Read out and store metadata
+- [ ] ADC's calibrations (storing and loading of calibration data, initiation of offset
+  and high gain calibration, separate for DMS and PT-100)
 
 ### TM Features
 Supports telemetry (TM) protocol 0.0.1

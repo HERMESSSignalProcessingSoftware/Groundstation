@@ -62,15 +62,9 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 item("DAPI: Disconnect") {
                     disableWhen(dapiVm.itemProperty.isNull)
                 }
-                item("DAPI: Configure") {
-                    disableWhen(dapiVm.itemProperty.isNull)
-                }
-                item("DAPI: Readout") {
-                    disableWhen(dapiVm.itemProperty.isNull)
-                }
-                item("DAPI: ADC calibrations") {
-                    disableWhen(dapiVm.itemProperty.isNull)
-                }
+                item("DAPI: Configure").action { openMainTab(::SPUConfigTab) }
+                item("DAPI: Readout")
+                item("DAPI: ADC calibrations")
                 separator()
                 menu("TM: Connect") {
                     enableWhen(tmVm.itemProperty.isNull)

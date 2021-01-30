@@ -14,8 +14,6 @@ import javax.json.JsonObject
  * @param initFile When provided, the model will load the file
  */
 class Project(initFile: File? = null): JsonModel {
-    val nameProperty = SimpleStringProperty("NO NAME SET")
-    var name: String by nameProperty
     val descriptionProperty = SimpleStringProperty("NO DESCRIPTION SET")
     var description: String by descriptionProperty
     val fileProperty = SimpleObjectProperty<File>(initFile)
@@ -79,9 +77,8 @@ class Project(initFile: File? = null): JsonModel {
 
     override fun updateModel(json: JsonObject) {
         with(json) {
-            if (!json.keys.containsAll(listOf("name", "description")))
+            if (!json.keys.containsAll(listOf("description")))
                 warning("Corrupted file loaded: Not all required keys existing.")
-            name = string("name") ?: "UNDEFINED"
             description = string("description") ?: "UNDEFINED"
         }
     }
@@ -89,7 +86,6 @@ class Project(initFile: File? = null): JsonModel {
 
     override fun toJSON(json: JsonBuilder) {
         with(json) {
-            add("name", name)
             add("description", description)
         }
     }

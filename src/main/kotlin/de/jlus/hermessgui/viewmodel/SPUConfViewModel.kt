@@ -84,15 +84,9 @@ class SPUConfViewModel(initItem: SPUConfig): ItemViewModel<SPUConfig>(initItem) 
      * reads the file from the specified name within project path, if it exists
      * @return true, if loading was successful
      */
-    fun loadFile (name: String): Boolean {
-        // check if project is loaded and a parent directory is available
-        val dir = projectVm.directory.value
-        if (!projectVm.isOpened.value || dir == null)
-            error("Could not read from file, because no project within a directory is loaded.")
-
-        // read from file
+    fun loadFile (file: File): Boolean {
         try {
-            item.readFromFile(File(dir, "$name.herconf"))
+            item.readFromFile(file)
             return true
         }
         catch (ex: IOException) {

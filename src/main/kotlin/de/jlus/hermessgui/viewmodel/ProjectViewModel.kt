@@ -14,14 +14,14 @@ import java.io.IOException
  * The main ViewModel representing any open project with all its open files
  */
 class ProjectViewModel: ItemViewModel<Project>(Project()) {
-    val name = bind(Project::nameProperty)
     val description = bind(Project::descriptionProperty)
     val file = bind(Project::fileProperty)
 
+    val name: Binding<String> = file.stringBinding { it?.nameWithoutExtension ?: "UNDEFINED" }
     val directory: Binding<File?> = file.objectBinding { it?.parentFile }
     val isOpened: BooleanBinding = file.isNotNull
-    val spuConfFiles = mutableListOf<String>().asObservable()
-    val measurementFiles = mutableListOf<String>().asObservable()
+    val spuConfFiles = mutableListOf<ProjectFileEntry>().asObservable()
+    val measurementFiles = mutableListOf<ProjectFileEntry>().asObservable()
 
 
     /**
@@ -55,7 +55,19 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
      * @return true, if save succeeded
      */
     fun saveProjectAs (f: File): Boolean {
+        val oldName = name.value
+        val oldDirectory = directory.value
         file.set(f)
+        val newDirectory = directory.value
+
+        // copy all project files and delete the old project file
+        if (oldDirectory != null && newDirectory != null) {
+            oldDirectory.copyRecursively(newDirectory, true)
+            if (oldName != name.value)
+                File(newDirectory, "$oldName.herpro").delete()
+        }
+
+        // save the herpro file
         return saveProject()
     }
 
@@ -132,9 +144,14 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
 
         // add all SPUConfig files
         spuConfFiles.clear()
-        spuConfFiles.addAll(files.filter{it.extension == "herconf"}.map{it.nameWithoutExtension})
+        spuConfFiles.addAll(files.filter { it.extension == "herconf" }
+            .map { ProjectFileEntry(it.nameWithoutExtension, it) }.sortedBy { it.name } )
         // add all measurement files
         measurementFiles.clear()
-        measurementFiles.addAll(files.filter{it.extension == "hermeas"}.map{it.nameWithoutExtension})
+        measurementFiles.addAll(files.filter { it.extension == "hermeas" }
+            .map { ProjectFileEntry(it.nameWithoutExtension, it) }.sortedBy { it.name } )
     }
 }
+
+
+class ProjectFileEntry (val name: String, val file: File)

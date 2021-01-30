@@ -7,6 +7,7 @@ import de.jlus.hermessgui.viewmodel.SPUConfViewModel
 import javafx.scene.layout.*
 import javafx.scene.text.Font
 import tornadofx.*
+import java.io.File
 
 
 /**
@@ -217,11 +218,13 @@ class SPUConfigTab: MainTab("SPU Conf") {
                     spacing = 10.0
                     hbox {
                         label("Min [s]: ")
-                        spinner(0, Int.MAX_VALUE, vm.storeMinTime.value, property = vm.storeMinTime)
+                        spinner(0, Int.MAX_VALUE, vm.storeMinTime.value,
+                            1, true, vm.storeMinTime).required()
                     }
                     hbox {
                         label("Max [s]: ")
-                        spinner(0, Int.MAX_VALUE, vm.storeMaxTime.value, property = vm.storeMaxTime)
+                        spinner(0, Int.MAX_VALUE, vm.storeMaxTime.value,
+                            1, true, vm.storeMaxTime).required()
                     }
                 }
             }
@@ -288,8 +291,8 @@ class SPUConfigTab: MainTab("SPU Conf") {
      * directory without the extension
      * @return true, if succeeded
      */
-    fun loadResource (name: String): Boolean {
-        if (!vm.loadFile(name))
+    fun loadResource (file: File): Boolean {
+        if (!vm.loadFile(file))
             return false
         tabTitle.value = "SPU Conf: " + vm.confName.value
         isProjectTab.value = true

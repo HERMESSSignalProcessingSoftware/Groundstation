@@ -7,6 +7,7 @@ import javafx.beans.property.*
 import javafx.geometry.Side
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.stage.FileChooser
 import javafx.stage.Modality
@@ -137,7 +138,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                         }
                         buttonbar {
                             enableWhen(projectVm.isOpened)
-                            button("Reload dir", ImageView(imgRefresh16)) {
+                            button("Reload dir", graphic = ImageView(imgRefresh16)) {
                                 action(projectVm::refreshFileLists)
                             }
                             button("Description") {
@@ -149,12 +150,9 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 item("SPU configs", ImageView("imgs/icon-spu-20.png"), true, true) {
                     vbox {
                         listview(projectVm.spuConfFiles) {
-                            cellFormat {
-                                text = it
-                                onDoubleClick {
-                                    openMainTab(::SPUConfigTab, tabIdSPUConfigPrefix + it) {
-                                        loadResource(it)
-                                    }
+                            configureFileList {
+                                openMainTab(::SPUConfigTab, tabIdSPUConfigPrefix + it.name) {
+                                    loadResource(it.file)
                                 }
                             }
                         }
@@ -167,9 +165,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 }
                 item("Measurements", ImageView("imgs/icon-measurement-20.png"), true, true) {
                     listview(projectVm.measurementFiles) {
-                        cellFormat {
-                            text = it
-                        }
+                        configureFileList {  } // TODO
                     }
                 }
             }
@@ -278,7 +274,6 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                             else if (finalLocation == null || !finalLocation.isDirectory || !finalLocation.exists())
                                 error("Location must be set to a directory")
                             else {
-                                projectVm.name.set(finalName)
                                 projectVm.saveProjectAs(finalLocation.resolve("$finalName/$finalName.herpro"))
                                 close()
                             }
@@ -318,5 +313,37 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
         newTab.f()
         newTab.tab.select()
         return newTab
+    }
+
+
+    private fun ListView<ProjectFileEntry>.configureFileList (onOpen: (ProjectFileEntry) -> Unit) {
+        val open = fun () {
+            val sel = selectedItem
+            if (sel != null)
+                onOpen(sel)
+        }
+
+        cellFormat {
+            text = it.name
+        }
+
+        onDoubleClick(open)
+        setOnKeyPressed { if (it.code == KeyCode.ENTER) open() }
+        contextmenu {
+            item("Open") {
+                enableWhen(selectionModel.selectedItemProperty().isNotNull)
+                action(open)
+            }
+            item("Delete file") {
+                enableWhen(selectionModel.selectedItemProperty().isNotNull)
+                action {
+                    val sel = selectedItem ?: return@action
+                    confirm("Delete file?", "Are you sure you want to delete ${sel.name}?") {
+                        sel.file.delete()
+                        projectVm.refreshFileLists()
+                    }
+                }
+            }
+        }
     }
 }

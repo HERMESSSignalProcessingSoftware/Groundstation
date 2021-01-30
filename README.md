@@ -9,7 +9,7 @@ _.herconf_, _.hermeas_
 ## Features
 ### Basic features
 - [X] Organize in project files
-- [ ] Store configuration files
+- [X] Store configuration files
 - [ ] Visualize measurements data as line plot
 - [ ] Visualize measurements data as center of force graphic for a specific time
 

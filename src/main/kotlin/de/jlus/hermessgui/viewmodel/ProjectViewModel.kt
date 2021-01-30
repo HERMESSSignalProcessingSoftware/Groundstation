@@ -14,11 +14,14 @@ import java.io.IOException
  * The main ViewModel representing any open project with all its open files
  */
 class ProjectViewModel: ItemViewModel<Project>(Project()) {
-    val name = bind(Project::nameProperty) // TODO Add validators for all fields
+    val name = bind(Project::nameProperty)
     val description = bind(Project::descriptionProperty)
     val file = bind(Project::fileProperty)
+
     val directory: Binding<File?> = file.objectBinding { it?.parentFile }
     val isOpened: BooleanBinding = file.isNotNull
+    val spuConfFiles = mutableListOf<String>().asObservable()
+    val measurementFiles = mutableListOf<String>().asObservable()
 
 
     /**
@@ -65,6 +68,7 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
         closeProject()
         try {
             item = Project(f)
+            refreshFileLists()
         }
         catch (e: IOException) {
             item = Project()
@@ -90,7 +94,7 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
      */
     fun closeProject (): Boolean {
         // ask if it should save the dirty model
-        if (isDirty || MainTab.allOpenTabs.any { it.isProjectTab && it.isDirty.value }) {
+        if (isDirty || MainTab.allOpenTabs.any { it.isProjectTab.value && it.isDirty.value }) {
             information(
                     "Project is not saved",
                     "Would you like to save all pending changes before closing?",
@@ -111,6 +115,26 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
 
         // actually closing the project
         item = Project()
+        spuConfFiles.clear()
+        measurementFiles.clear()
         return true
+    }
+
+
+    /**
+     * refreshes the lists of project associated files
+     */
+    fun refreshFileLists () {
+        val dir = directory.value
+        if (dir == null || !dir.isDirectory)
+            return
+        val files = dir.listFiles()?.toList() ?: return
+
+        // add all SPUConfig files
+        spuConfFiles.clear()
+        spuConfFiles.addAll(files.filter{it.extension == "herconf"}.map{it.nameWithoutExtension})
+        // add all measurement files
+        measurementFiles.clear()
+        measurementFiles.addAll(files.filter{it.extension == "hermeas"}.map{it.nameWithoutExtension})
     }
 }

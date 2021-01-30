@@ -1,18 +1,14 @@
 package de.jlus.hermessgui.view
 
 import de.jlus.hermessgui.viewmodel.ProjectViewModel
-import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.web.HTMLEditor
 import tornadofx.*
 
 
 /**
- *
+ * displays the settings for the settings (currently only description)
  */
 class EditProjectTab : MainTab("Project description") {
-    override var isProjectTab = true
-    override val isDirty = SimpleBooleanProperty(false)
-
     private val projectVM by inject<ProjectViewModel>()
     private lateinit var htmlBox: HTMLEditor
 
@@ -40,5 +36,10 @@ class EditProjectTab : MainTab("Project description") {
         projectVM.description.value = htmlBox.htmlText
         isDirty.value = false
         return true
+    }
+
+
+    init {
+        isProjectTab.value = true
     }
 }

@@ -5,6 +5,8 @@ import de.jlus.hermessgui.app.SPUConfPGA
 import de.jlus.hermessgui.app.SPUConfSamplerate
 import javafx.beans.property.*
 import tornadofx.*
+import java.io.File
+import java.io.IOException
 import javax.json.JsonObject
 
 
@@ -39,6 +41,32 @@ class SPUConfig: JsonModel {
     val storeMaxTimeProperty = SimpleIntegerProperty(Int.MAX_VALUE)
     // TM settings
     val tmEnabledProperty = SimpleBooleanProperty(false)
+
+
+    /**
+     * saves the SPUConfig in a json file
+     * @param file the file to store to. The containing directory must exist. It is not required for
+     * the file to exist, it should be writable however.
+     * @throws IOException if cannot write to file
+     */
+    fun saveToFile (file: File) {
+        if (!file.canWrite() && file.exists())
+            throw IOException("Can not write to file: ${file.absolutePath}")
+        file.writeText(JsonBuilder().add("SPU-Config", this).build().toPrettyString())
+    }
+
+
+    /**
+     * overrides the properties of this object with the ones specified by the file provided
+     * @param file the file to read from. Must exist.
+     * @throws IOException if could not read file
+     * @throws NullPointerException if could not find all fields required
+     */
+    fun readFromFile (file: File) {
+        if (!file.canRead())
+            throw IOException("Can not read file: ${file.absolutePath}")
+        updateModel(loadJsonObject(file.toPath()).getJsonObject("SPU-Config"))
+    }
 
 
     /**

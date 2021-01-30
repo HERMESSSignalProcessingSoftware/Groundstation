@@ -1,6 +1,7 @@
 package de.jlus.hermessgui.view
 
-import javafx.beans.property.BooleanProperty
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleStringProperty
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
@@ -20,11 +21,9 @@ import tornadofx.onChange
  */
 abstract class MainTab(title: String, initialTabId: String? = null) : Fragment() {
     var tab = Tab(title)
-    abstract var isProjectTab: Boolean
-    abstract val isDirty: BooleanProperty
-    var tabTitle: String
-        set(value) { tab.text = value  }
-        get() = tab.text ?: ""
+    val isProjectTab = SimpleBooleanProperty(false)
+    val isDirty = SimpleBooleanProperty(false)
+    val tabTitle = SimpleStringProperty(title)
     var tabId: String? = initialTabId
         set(value) {
             // check if the ID exists already and does not allow the ID to be renamed
@@ -54,7 +53,7 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
      * @return true, if saving succeeded
      */
     open fun onProjectSave(): Boolean {
-        if (isProjectTab)
+        if (isProjectTab.value)
             return saveResource()
         return true
     }
@@ -67,7 +66,7 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
      * @return true, if allow to be closed
      */
     open fun onProjectClose(): Boolean {
-        if (isProjectTab) {
+        if (isProjectTab.value) {
             if (!closeResource())
                 return false
             closeTab()
@@ -84,13 +83,13 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
     open fun closeResource(): Boolean {
         if (isDirty.value) {
             information(
-                "The tab '$tabTitle' contains unsaved changes",
+                "The tab '${tabTitle.value}' contains unsaved changes",
                 "Do you want to save them now?",
                 ButtonType.YES, ButtonType.NO, ButtonType.CANCEL,
                 owner = currentWindow
             ) {
                 if (it == ButtonType.YES && !saveResource()) {
-                    tornadofx.error("Could not save content of tab '$tabTitle'.", owner=currentWindow)
+                    tornadofx.error("Could not save content of tab '${tabTitle.value}'.", owner=currentWindow)
                     return false
                 }
                 else if (it == ButtonType.CANCEL)
@@ -134,7 +133,7 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
             // screw it. The tab freezes, if I consume the event in onCloseRequest
             val pos = mainTabPane!!.tabs.indexOf(tab)
             if (!closeResource()) {
-                tab = Tab(tabTitle)
+                tab = Tab(tab.text)
                 mainTabPane!!.tabs.add(pos, tab)
                 lateinit()
             }
@@ -144,6 +143,25 @@ abstract class MainTab(title: String, initialTabId: String? = null) : Fragment()
 
         // add to the list of all open tabs
         allOpenTabs.add(this)
+    }
+
+
+    /**
+     * is being called, whenever one of these
+     */
+    private fun updateTabTitle () {
+        val signsList = mutableListOf<String>()
+        if (isDirty.value) signsList.add("*")
+        if (isProjectTab.value) signsList.add("P")
+        val signs = if (signsList.isEmpty()) "" else signsList.joinToString(prefix = "[", postfix = "] ")
+        tab.text = "$signs${tabTitle.value}"
+    }
+
+
+    init {
+        isProjectTab.onChange { updateTabTitle() }
+        isDirty.onChange { updateTabTitle() }
+        tabTitle.onChange { updateTabTitle() }
     }
 
 

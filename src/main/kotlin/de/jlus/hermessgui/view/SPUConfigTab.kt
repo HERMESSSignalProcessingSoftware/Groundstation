@@ -1,12 +1,9 @@
 package de.jlus.hermessgui.view
 
-import de.jlus.hermessgui.app.SPUConfOverrideMode
-import de.jlus.hermessgui.app.SPUConfPGA
-import de.jlus.hermessgui.app.SPUConfSamplerate
-import de.jlus.hermessgui.app.imgTooltip
+import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.model.SPUConfig
+import de.jlus.hermessgui.viewmodel.ProjectViewModel
 import de.jlus.hermessgui.viewmodel.SPUConfViewModel
-import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.layout.*
 import javafx.scene.text.Font
 import tornadofx.*
@@ -17,8 +14,7 @@ import tornadofx.*
  */
 class SPUConfigTab: MainTab("SPU Conf") {
     private val vm = SPUConfViewModel(SPUConfig())
-    override var isProjectTab = true
-    override val isDirty = SimpleBooleanProperty(false)
+    private val projectVm by inject<ProjectViewModel>()
 
 
     override val root = scrollpane {
@@ -29,7 +25,7 @@ class SPUConfigTab: MainTab("SPU Conf") {
             prefWidth = 700.0 // based on the buttonbar on the bottom - widest object
 
             row {
-                label(this@SPUConfigTab.tab.textProperty()) {
+                label(this@SPUConfigTab.tabTitle) {
                     gridpaneConstraints { columnSpan = 3 }
                     font = Font(20.0)
                 }
@@ -49,7 +45,12 @@ class SPUConfigTab: MainTab("SPU Conf") {
                             "read out later.")
                 }
                 label("Configuration name: ")
-                textfield(vm.confName)
+                textfield(vm.confName).validator {
+                    if (regexConfName.matches(it ?: ""))
+                        null
+                    else
+                        error("The name must match ${regexConfName.pattern}")
+                }
             }
             // override Master/Slave
             row {
@@ -249,6 +250,8 @@ class SPUConfigTab: MainTab("SPU Conf") {
                     }
                     button("Save") {
                         isDefaultButton = true
+                        enableWhen(projectVm.isOpened and vm.valid)
+                        action(::saveResource)
                     }
                     button("Reset fields") {
                         enableWhen(vm.dirty)
@@ -264,5 +267,38 @@ class SPUConfigTab: MainTab("SPU Conf") {
             }
 
         }
+    }
+
+
+    override fun saveResource(): Boolean {
+        // safe to file
+        if (!vm.commit())
+            return false
+        // update the title
+        tabTitle.value = "SPU Conf: " + vm.confName.value
+        // at least after saving this beast is a project tab
+        isProjectTab.value = true
+        tabId = tabIdSPUConfigPrefix + vm.confName.value
+        return true
+    }
+
+
+    /**
+     * loads the resource from a string defined by the name of the file within the project
+     * directory without the extension
+     * @return true, if succeeded
+     */
+    fun loadResource (name: String): Boolean {
+        if (!vm.loadFile(name))
+            return false
+        tabTitle.value = "SPU Conf: " + vm.confName.value
+        isProjectTab.value = true
+        tabId = tabIdSPUConfigPrefix + vm.confName.value
+        return true
+    }
+
+
+    init {
+        isDirty.bind(vm.dirty)
     }
 }

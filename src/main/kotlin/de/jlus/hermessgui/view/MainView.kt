@@ -1,6 +1,5 @@
 package de.jlus.hermessgui.view
 
-import com.sun.javafx.collections.ObservableListWrapper
 import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.view.MainTab.Companion.findByTabId
 import de.jlus.hermessgui.viewmodel.*
@@ -9,7 +8,6 @@ import javafx.geometry.Side
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.layout.Priority
-import javafx.scene.paint.Paint
 import javafx.stage.FileChooser
 import javafx.stage.Modality
 import tornadofx.*
@@ -114,7 +112,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 minWidth = 200.0
                 dockingSide = Side.LEFT
                 multiselect = true
-                item("Project config", ImageView("imgs/icon-config-20.png"), true) {
+                item("Project config", ImageView("imgs/icon-config-20.png"), true, true) {
                     form {
                         fieldset("Project configuration") {
                             field("Name:") {
@@ -138,31 +136,39 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                             }
                         }
                         buttonbar {
+                            enableWhen(projectVm.isOpened)
+                            button("Reload dir", ImageView(imgRefresh16)) {
+                                action(projectVm::refreshFileLists)
+                            }
                             button("Description") {
-                                enableWhen(projectVm.isOpened)
                                 action { openMainTab(::EditProjectTab, tabIdEditProject) }
                             }
                         }
                     }
                 }
-                item("SPU configs", ImageView("imgs/icon-spu-20.png"), true) {
+                item("SPU configs", ImageView("imgs/icon-spu-20.png"), true, true) {
                     vbox {
-                        listview(tree.children) {
+                        listview(projectVm.spuConfFiles) {
                             cellFormat {
-                                textProperty().bind(it.descriptor)
+                                text = it
+                                onDoubleClick {
+                                    openMainTab(::SPUConfigTab, tabIdSPUConfigPrefix + it) {
+                                        loadResource(it)
+                                    }
+                                }
                             }
                         }
                         button("Add new configuration file", graphic = ImageView(imgAdd)) {
                             fitToParentWidth()
-                            //enableWhen(projectVm.isOpened)
+                            enableWhen(projectVm.isOpened)
                             action { openMainTab(::SPUConfigTab) }
                         }
                     }
                 }
-                item("Measurements", ImageView("imgs/icon-measurement-20.png"), true) {
-                    listview(tree.children) {
+                item("Measurements", ImageView("imgs/icon-measurement-20.png"), true, true) {
+                    listview(projectVm.measurementFiles) {
                         cellFormat {
-                            textProperty().bind(it.descriptor)
+                            text = it
                         }
                     }
                 }
@@ -313,34 +319,4 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
         newTab.tab.select()
         return newTab
     }
-}
-
-
-/**
- * Represents a single item in the TreeView on the left side
- * TODO remove all this shit
- */
-class ProjectOverviewItem(descriptor: String) {
-    val descriptor = SimpleStringProperty(descriptor)
-    val children = ObservableListWrapper(mutableListOf<ProjectOverviewItem>())
-    val fillColor = SimpleObjectProperty(Paint.valueOf("#000000"))
-
-    /**
-     * create ProjectOverviewItem and add to this children
-     */
-    fun item(descriptor: String, f: ProjectOverviewItem.() -> Unit = {}): ProjectOverviewItem {
-        val item = ProjectOverviewItem(descriptor)
-        item.f()
-        children.add(item)
-        return item
-    }
-}
-
-val tree = ProjectOverviewItem("Project overview").apply {
-    item("Project configuration") {
-        item("Test")
-        fillColor.set(Paint.valueOf("#006000"))
-    }
-    item("SPU configuration files")
-    item("Measurement readout files")
 }

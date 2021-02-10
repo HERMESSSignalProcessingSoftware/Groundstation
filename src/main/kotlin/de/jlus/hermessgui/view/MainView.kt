@@ -53,6 +53,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
             }
 
             menu("SPU Interfacing") {
+                // TODO most actions missing
                 menu("DAPI: Connect") {
                     enableWhen(dapiVm.itemProperty.isNull)
                     item("Reload ports")
@@ -62,8 +63,8 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     disableWhen(dapiVm.itemProperty.isNull)
                 }
                 item("DAPI: Configure").action { openMainTab(::SPUConfigTab) }
-                item("DAPI: Readout")
-                item("DAPI: ADC calibrations")
+                item("DAPI: ADC calibrations").action { openMainTab(::CalTab) }
+                item("DAPI: Readout measurements")
                 separator()
                 menu("TM: Connect") {
                     enableWhen(tmVm.itemProperty.isNull)
@@ -147,6 +148,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                         }
                     }
                 }
+                // spu config drawer item
                 item("SPU configs", ImageView("imgs/icon-spu-20.png"), true, true) {
                     vbox {
                         listview(projectVm.spuConfFiles) {
@@ -163,6 +165,24 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                         }
                     }
                 }
+                // calibration drawer item
+                item("Calibrations", ImageView("imgs/icon-cal-20.png"), false, true) {
+                    vbox {
+                        listview(projectVm.calFiles) {
+                            configureFileList {
+                                openMainTab(::CalTab, tabIdCalPrefix + it.name) {
+                                    loadResource(it.file)
+                                }
+                            }
+                        }
+                        button("Add new calibrations file", graphic = ImageView(imgAdd)) {
+                            fitToParentWidth()
+                            enableWhen(projectVm.isOpened)
+                            action { openMainTab(::CalTab) }
+                        }
+                    }
+                }
+                // measurements drawer item
                 item("Measurements", ImageView("imgs/icon-measurement-20.png"), true, true) {
                     listview(projectVm.measurementFiles) {
                         configureFileList {  } // TODO

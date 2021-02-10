@@ -21,6 +21,7 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
     val directory: Binding<File?> = file.objectBinding { it?.parentFile }
     val isOpened: BooleanBinding = file.isNotNull
     val spuConfFiles = mutableListOf<ProjectFileEntry>().asObservable()
+    val calFiles = mutableListOf<ProjectFileEntry>().asObservable()
     val measurementFiles = mutableListOf<ProjectFileEntry>().asObservable()
 
 
@@ -145,6 +146,10 @@ class ProjectViewModel: ItemViewModel<Project>(Project()) {
         // add all SPUConfig files
         spuConfFiles.clear()
         spuConfFiles.addAll(files.filter { it.extension == "herconf" }
+            .map { ProjectFileEntry(it.nameWithoutExtension, it) }.sortedBy { it.name } )
+        // add all SPUConfig files
+        calFiles.clear()
+        calFiles.addAll(files.filter { it.extension == "hercal" }
             .map { ProjectFileEntry(it.nameWithoutExtension, it) }.sortedBy { it.name } )
         // add all measurement files
         measurementFiles.clear()

@@ -10,6 +10,7 @@ const val tmVersion = "0.0.1"
 // tabIds
 const val tabIdEditProject = "PROJECT:EDIT"
 const val tabIdSPUConfigPrefix = "SPUCONF:"
+const val tabIdCalPrefix = "CAL:"
 
 // images
 val imgDirectory20 = Image("imgs/icon-directory-20.png")
@@ -19,7 +20,7 @@ val imgRefresh16 = Image("imgs/icon-refresh-16.png")
 
 // regex
 val regexProjectName = Regex("[A-Za-z0-9]{1,20}")
-val regexConfName = Regex("[A-Za-z0-9 _]{0,20}[A-Za-z0-9]")
+val regexFileName = Regex("[A-Za-z0-9 _]{0,20}[A-Za-z0-9]")
 
 // enums for SPU configuration
 enum class SPUConfOverrideMode (val text: String) {

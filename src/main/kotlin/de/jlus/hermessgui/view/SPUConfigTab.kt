@@ -47,10 +47,10 @@ class SPUConfigTab: MainTab("SPU Conf") {
                 }
                 label("Configuration name: ")
                 textfield(vm.confName).validator {
-                    if (regexConfName.matches(it ?: ""))
+                    if (regexFileName.matches(it ?: ""))
                         null
                     else
-                        error("The name must match ${regexConfName.pattern}")
+                        error("The name must match ${regexFileName.pattern}")
                 }
             }
             // override Master/Slave

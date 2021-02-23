@@ -91,10 +91,12 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     action { hostServices.showDocument("https://github.com/HERMESSSignalProcessingSoftware") }
                 }
                 item("DAPI protocol specification") {
-                    // TODO link to DAPI spec
+                    action { hostServices.showDocument("https://github.com/HERMESSSignalProcessingSoftware/" +
+                            "VersionedSpecs/blob/main/DAPI.md") }
                 }
                 item("TM protocol specification") {
-                    // TODO link to TM spec
+                    action { hostServices.showDocument("https://github.com/HERMESSSignalProcessingSoftware/" +
+                            "VersionedSpecs/blob/main/TM.md") }
                 }
                 separator()
                 item("V. $thisVersion") {

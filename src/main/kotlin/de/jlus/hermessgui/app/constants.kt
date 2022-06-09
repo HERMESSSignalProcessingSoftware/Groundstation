@@ -1,11 +1,12 @@
 package de.jlus.hermessgui.app
 
+import com.fazecast.jSerialComm.SerialPort
 import javafx.scene.image.Image
 
 // versions
 const val thisVersion = "0.0.1"
 const val dapiVersion = "0.0.1"
-const val tmVersion = "0.0.1"
+const val tmVersion = "Not supported"
 
 // tabIds
 const val tabIdEditProject = "PROJECT:EDIT"
@@ -22,6 +23,12 @@ val imgClear16 = Image("imgs/icon-clear-16.png")
 // regex
 val regexProjectName = Regex("[A-Za-z0-9]{1,20}")
 val regexFileName = Regex("[A-Za-z0-9 _]{0,20}[A-Za-z0-9]")
+
+// dapi connection
+const val dapiBaudrate = 115200
+const val dapiParity = SerialPort.EVEN_PARITY
+const val dapiStopBits = SerialPort.ONE_STOP_BIT
+const val dapiDataBits = 8
 
 // enums for SPU configuration
 enum class SPUConfOverrideMode (val text: String) {

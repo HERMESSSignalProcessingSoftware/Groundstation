@@ -49,6 +49,10 @@ class LoggerTab : MainTab("Logger") {
                 text = SimpleDateFormat("HH:mm:ss").format(it)
                 style = "-fx-text-fill: ${rowItem.severity.color};"
             }
+            readonlyColumn("Source", Logger.LogEntry::source).cellFormat {
+                text = it
+                style = "-fx-text-fill: ${rowItem.severity.color};"
+            }
             readonlyColumn("Type", Logger.LogEntry::severity).cellFormat {
                 text = it.name
                 style = "-fx-text-fill: ${rowItem.severity.color};"

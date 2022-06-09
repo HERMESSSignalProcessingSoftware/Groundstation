@@ -1,6 +1,7 @@
 package de.jlus.hermessgui.view
 
 import de.jlus.hermessgui.app.*
+import de.jlus.hermessgui.model.Dapi
 import de.jlus.hermessgui.view.MainTab.Companion.findByTabId
 import de.jlus.hermessgui.viewmodel.*
 import javafx.beans.property.*
@@ -21,9 +22,9 @@ import java.io.File
  */
 class MainView : View("Preliminary HERMESS SPU Interface software") {
     private val projectVm by inject<ProjectViewModel>()
-    private val dapiVm = DapiViewModel()
-    private val tmVm = TmViewModel()
+    private val tmVm by inject<TmViewModel>()
     private val loggerVm by inject<LoggerViewModel>()
+    private val dapi = Dapi()
 
     private val progressValue = SimpleDoubleProperty(0.0)
     private val tabPane = TabPane()
@@ -53,14 +54,29 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
             }
 
             menu("SPU Interfacing") {
-                // TODO most actions missing
                 menu("DAPI: Connect") {
-                    enableWhen(dapiVm.itemProperty.isNull)
-                    item("Reload ports")
+                    // save all menu items of the lists
+                    val portItems = mutableListOf<MenuItem>()
+                    dapi.ports.onChange {
+                        // delete all menu items
+                        for (rem in portItems) {
+                            items.remove(rem)
+                        }
+                        // add new elements for the ports
+                        for (added in it.list) {
+                            val menuItem = item(added.descriptivePortName)
+                            menuItem.action { dapi.connect(added) }
+                            portItems.add(menuItem)
+                        }
+                    }
+                    // display reload ports button
+                    enableWhen(dapi.activePortProperty.isNull)
+                    item("Reload ports").action(dapi::reloadPorts)
                     separator()
                 }
                 item("DAPI: Disconnect") {
-                    disableWhen(dapiVm.itemProperty.isNull)
+                    disableWhen(dapi.activePortProperty.isNull)
+                    action(dapi::disconnect)
                 }
                 item("DAPI: Configure").action { openMainTab(::SPUConfigTab) }
                 item("DAPI: ADC calibrations").action { openMainTab(::CalTab) }
@@ -68,7 +84,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 separator()
                 menu("TM: Connect") {
                     enableWhen(tmVm.itemProperty.isNull)
-                    item("Reload ports")
+                    item("Reload ports").isDisable = true
                     separator()
                 }
                 item("TM: Disconnect") {
@@ -118,7 +134,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 minWidth = 200.0
                 dockingSide = Side.LEFT
                 multiselect = true
-                item("Project config", ImageView("imgs/icon-config-20.png"), true, true) {
+                item("Project config", ImageView("imgs/icon-config-20.png"),  expanded=true, showHeader=true) {
                     form {
                         fieldset("Project configuration") {
                             field("Name:") {
@@ -153,7 +169,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     }
                 }
                 // spu config drawer item
-                item("SPU configs", ImageView("imgs/icon-spu-20.png"), true, true) {
+                item("SPU configs", ImageView("imgs/icon-spu-20.png"), expanded = true, showHeader = true) {
                     vbox {
                         listview(projectVm.spuConfFiles) {
                             configureFileList {
@@ -170,7 +186,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     }
                 }
                 // calibration drawer item
-                item("Calibrations", ImageView("imgs/icon-cal-20.png"), false, true) {
+                item("Calibrations", ImageView("imgs/icon-cal-20.png"), expanded = false, showHeader = true) {
                     vbox {
                         listview(projectVm.calFiles) {
                             configureFileList {
@@ -187,7 +203,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     }
                 }
                 // measurements drawer item
-                item("Measurements", ImageView("imgs/icon-measurement-20.png"), true, true) {
+                item("Measurements", ImageView("imgs/icon-measurement-20.png"), expanded=true, showHeader=true) {
                     listview(projectVm.measurementFiles) {
                         configureFileList {  } // TODO
                     }

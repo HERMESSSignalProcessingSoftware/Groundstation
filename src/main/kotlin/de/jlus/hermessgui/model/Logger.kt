@@ -13,14 +13,15 @@ import java.util.Date
 class Logger {
     enum class LoggingSeverity (val color: String) {
         ERROR("red"),
-        WARN("orange"),
+        WARN("darkorange"),
         INFO("black")
     }
 
-    class LogEntry (val severity: LoggingSeverity, val message: String, val timestamp: Date = Date()) {
+    class LogEntry (val severity: LoggingSeverity, val message: String,
+                    val source: String, val timestamp: Date = Date()) {
         override fun toString (): String {
             return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS").format(timestamp) +
-                    ":\t" + severity.name + "\t" + message
+                    ":\t" + severity.name + "\t" + message + "\t" + source
         }
     }
 

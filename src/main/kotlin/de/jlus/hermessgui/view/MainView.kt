@@ -23,8 +23,8 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
     private val projectVm by inject<ProjectViewModel>()
     private val dapiVm = DapiViewModel()
     private val tmVm = TmViewModel()
+    private val loggerVm by inject<LoggerViewModel>()
 
-    private val statusText = SimpleStringProperty("Not connected")
     private val progressValue = SimpleDoubleProperty(0.0)
     private val tabPane = TabPane()
 
@@ -77,6 +77,8 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 item("TM: Life view") {
                     disableWhen(tmVm.itemProperty.isNull)
                 }
+                separator()
+                item("Interaction Log").action { openMainTab(::LoggerTab, "logger") }
             }
 
             menu("About") {
@@ -204,7 +206,13 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
 
         }
 
-        bottom = statusbar(statusText, progressValue) {}
+        bottom = statusbar(loggerVm.statusText, progressValue) {
+            styleProperty().bind(loggerVm.statusStyle)
+            cursor = javafx.scene.Cursor.HAND
+            onLeftClick {
+                openMainTab(::LoggerTab, "logger")
+            }
+        }
     }
 
 
@@ -313,7 +321,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
      * Helper function for creation of new MainTab
      * @param constructor You can pass a constructor as a lambda like ::MyMainTabClass
      * @param tabId the ID associated with a tab. If not null, it will try to open any associated tab
-     * with that id. Could it not found such a tab, the newly created tab will have this tabId.
+     * with that id. Could it not find such a tab, the newly created tab will have this tabId.
      * @param f the builder function. Only applied, if a new instance was created
      */
     private inline fun <reified T: MainTab> openMainTab (

@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>1.4.21</kotlin.version>
+        <kotlin.version>1.6.21</kotlin.version>
         <tornadofx.version>1.7.20</tornadofx.version>
         <openjfx.version>15.0.1</openjfx.version>
         <main.class>de.jlus.hermessgui.app.MainClassKt</main.class>
@@ -61,6 +61,14 @@
             <version>${openjfx.version}</version>
         </dependency>
         <!-- End TornadoFx and JavaFx -->
+
+        <!-- Serial communication -->
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>[2.0.0,3.0.0)</version>
+        </dependency>
+        <!-- End Serial communication -->
 
         <!-- ONLY ADDED TO INCREASE COMPATIBILITY AND REMOVE UGLY WARNINGS -->
         <dependency>

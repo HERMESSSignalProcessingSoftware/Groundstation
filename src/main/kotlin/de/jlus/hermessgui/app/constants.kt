@@ -17,6 +17,7 @@ val imgDirectory20 = Image("imgs/icon-directory-20.png")
 val imgTooltip = Image("imgs/icon-tooltip-12.png")
 val imgAdd = Image("imgs/icon-add.png")
 val imgRefresh16 = Image("imgs/icon-refresh-16.png")
+val imgClear16 = Image("imgs/icon-clear-16.png")
 
 // regex
 val regexProjectName = Regex("[A-Za-z0-9]{1,20}")

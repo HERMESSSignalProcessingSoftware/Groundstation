@@ -4,7 +4,6 @@ import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.model.SPUConfig
 import de.jlus.hermessgui.viewmodel.ProjectViewModel
 import de.jlus.hermessgui.viewmodel.SPUConfViewModel
-import javafx.scene.layout.*
 import javafx.scene.text.Font
 import tornadofx.*
 import java.io.File

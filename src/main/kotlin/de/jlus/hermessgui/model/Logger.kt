@@ -12,9 +12,9 @@ import java.util.Date
  */
 class Logger {
     enum class LoggingSeverity (val color: String) {
-        ERROR("red"),
+        INFO("black"),
         WARN("darkorange"),
-        INFO("black")
+        ERROR("red")
     }
 
     class LogEntry (val severity: LoggingSeverity, val message: String,

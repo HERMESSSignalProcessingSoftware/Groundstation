@@ -5,7 +5,7 @@ import javafx.scene.image.Image
 
 // versions
 const val thisVersion = "0.0.1"
-const val dapiVersion = "0.0.1"
+const val dapiVersion = "1.0.0"
 const val tmVersion = "Not supported"
 
 // tabIds

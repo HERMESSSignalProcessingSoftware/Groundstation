@@ -5,18 +5,22 @@ import com.fazecast.jSerialComm.SerialPort.FLOW_CONTROL_CTS_ENABLED
 import com.fazecast.jSerialComm.SerialPortEvent
 import com.fazecast.jSerialComm.SerialPortMessageListener
 import de.jlus.hermessgui.app.*
+import de.jlus.hermessgui.viewmodel.CalViewModel
 import de.jlus.hermessgui.viewmodel.LoggerViewModel
+import javafx.application.Platform
 import javafx.beans.property.SimpleObjectProperty
 import tornadofx.find
 import tornadofx.observableListOf
+import kotlin.time.Duration.Companion.microseconds
 
 
 /**
  * Manages all aspects regarding the DAPI connection
  */
-class Dapi {
+object Dapi {
     val activePortProperty = SimpleObjectProperty<SerialPort?>(null)
     val ports = observableListOf<SerialPort>()
+    var dpReceiver: CalViewModel? = null
 
     private val logger = find<LoggerViewModel>()
 
@@ -68,7 +72,8 @@ class Dapi {
 
                     when (p0.receivedData[0].toInt()) {
                         0x00 -> handleStringMessage(content)
-                        else -> logger.warning("Unrecognized command")
+                        0x03 -> handleLiveData(content)
+                        else -> logger.warning("Unrecognized command " + p0.receivedData.toHex())
                     }
                 }
             })
@@ -116,16 +121,61 @@ class Dapi {
 
 
     /**
+     * Starts the live data acquisition
+     * @param start true, if the SPU shall send live feed
+     */
+    fun commandSetLiveDataAcquisition (start: Boolean) {
+        sendCommand(byteArrayOf(if (start) 0x03 else 0x04))
+    }
+
+
+    /**
      * Performs the internal handling of received string messages
      */
     private fun handleStringMessage (content: ByteArray) {
-        // in case a new message was received
+        // in case a new string message was received
         val msg = content.decodeToString(endIndex = content.size-1)
         when (content[content.size - 1]) {
             '0'.code.toByte() -> logger.info(msg, "DAPI")
             '1'.code.toByte() -> logger.warning(msg, "DAPI")
             '2'.code.toByte() -> logger.error(msg, "DAPI")
             else -> logger.warning("Malformed DAPI message received")
+        }
+    }
+
+
+    /**
+     * decodes and dissiminates live DAPI live data
+     */
+    private fun handleLiveData (content: ByteArray) {
+        val numDataframes = content[0].toInt()
+        val stampValues = mutableListOf<Dataframe>()
+
+        // get timestamp from bytes 1 to 8
+        var timestamp: ULong = 0u
+        for (i in 0..7) {
+            timestamp = (timestamp shl 8) or (content[i + 1].toULong() and 0xFFu)
+        }
+        val ts = timestamp.toLong().microseconds * 250
+
+        // i know the data conversions look terrible: kotlin makes me do that, because it implicitly carries
+        // the negative bit everywhere it can
+        for (i in 0 until numDataframes) {
+            stampValues.add(Dataframe(
+                stampId = content[(i*8)+9].toInt(),
+                errAdcLagging = (content[(i*8)+10].toUInt() and 0x01U) != 0x00U,
+                errStampLagging = (content[(i*8)+10].toUInt() and 0x02U) != 0x00U,
+                errNoNew = (content[(i*8)+10].toUInt() and 0x04U) != 0x00U,
+                errOverwritten = (content[(i*8)+10].toUInt() and 0x08U) != 0x00U,
+                sgr1 = (content[(i*8)+11].toInt() shl 8) or ((content[(i*8)+12].toInt()) and 0xff),
+                sgr2 = (content[(i*8)+13].toInt() shl 8) or ((content[(i*8)+14].toInt()) and 0xff),
+                rtd = (content[(i*8)+15].toInt() shl 8) or ((content[(i*8)+16].toInt()) and 0xff),
+                timestamp = ts
+            ))
+        }
+
+        Platform.runLater {
+            dpReceiver?.receiveDatapackage(stampValues)
         }
     }
 
@@ -147,4 +197,6 @@ class Dapi {
         // send command
         activePortProperty.value?.writeBytes(bytes, bytes.size.toLong())
     }
+
+    private fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 }

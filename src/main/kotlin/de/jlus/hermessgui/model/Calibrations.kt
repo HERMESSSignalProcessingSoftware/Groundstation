@@ -5,13 +5,17 @@ import javafx.beans.property.SimpleStringProperty
 import tornadofx.*
 import java.io.File
 import java.io.IOException
+import javax.json.Json
 import javax.json.JsonObject
 
 
 class Calibrations: JsonModel {
+    val dataframes = observableListOf<Dataframe>()
+
     // general settings
     val calName = SimpleStringProperty("UNDEFINED")
-    val stamps = Array(3) {Stamp()}
+    val targetSize = SimpleIntegerProperty(120)
+    val actualSize = SimpleIntegerProperty(0)
 
 
     /**
@@ -46,8 +50,13 @@ class Calibrations: JsonModel {
     override fun updateModel (json: JsonObject) {
         try {
             calName.value = json.string("calName")!!
-            for (i in stamps.indices)
-                stamps[i].updateModel(json.jsonObject("stamp$i")!!)
+            targetSize.value = json.int("targetSize")!!
+            actualSize.value = json.int("actualSize")!!
+            for (dfValues in json.getJsonArray("dataframes") ?: listOf()) {
+                val df = Dataframe()
+                df.updateModel(dfValues.asJsonObject())
+                dataframes.add(df)
+            }
         }
         catch (_: NullPointerException) {
             warning("The configuration file does not contain all required fields.")
@@ -64,46 +73,12 @@ class Calibrations: JsonModel {
     override fun toJSON (json: JsonBuilder) {
         with(json) {
             add("calName", calName.value)
-            for (i in stamps.indices)
-                add("stamp$i", stamps[i])
-        }
-    }
-
-
-
-    /**
-     * Contains for 2 strain gauges and 1 PT-100
-     * - 24 bit complementary offset calibration data
-     * - 24 bit complementary full scale calibration data
-     */
-    class Stamp: JsonModel {
-        val dms1Ofc = SimpleIntegerProperty(0)
-        val dms1Fsc = SimpleIntegerProperty(0)
-        val dms2Ofc = SimpleIntegerProperty(0)
-        val dms2Fsc = SimpleIntegerProperty(0)
-        val tempOfc = SimpleIntegerProperty(0)
-        val tempFsc = SimpleIntegerProperty(0)
-
-        override fun updateModel (json: JsonObject) {
-            with(json) {
-                dms1Ofc.value = int("dms1Ofc")!!
-                dms1Fsc.value = int("dms1Fsc")!!
-                dms2Ofc.value = int("dms2Ofc")!!
-                dms2Fsc.value = int("dms2Fsc")!!
-                tempOfc.value = int("tempOfc")!!
-                tempFsc.value = int("tempFsc")!!
-            }
-        }
-
-        override fun toJSON (json: JsonBuilder) {
-            with(json) {
-                add("dms1Ofc", dms1Ofc.value)
-                add("dms1Fsc", dms1Fsc.value)
-                add("dms2Ofc", dms2Ofc.value)
-                add("dms2Fsc", dms2Fsc.value)
-                add("tempOfc", tempOfc.value)
-                add("tempFsc", tempFsc.value)
-            }
+            add("targetSize", targetSize.value)
+            add("actualSize", actualSize.value)
+            val builder = Json.createArrayBuilder()
+            for (i in dataframes.indices)
+                builder.add(dataframes[i].toJSON())
+            add("dataframes", builder)
         }
     }
 }

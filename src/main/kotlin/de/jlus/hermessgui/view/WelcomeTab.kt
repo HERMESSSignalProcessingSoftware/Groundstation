@@ -44,7 +44,7 @@ class WelcomeTab : MainTab("Welcome") {
         text("""Developed and maintained by and for REXUS-HERMESS
                 |
                 |This Version is able to communicate with the HERMESS Signal Processing Unit (SPU) via the DAPI 
-                |protocol version 0.0.1. For more documentation on the versions of the HERMESS software stack 
+                |protocol version $dapiVersion. For more documentation on the versions of the HERMESS software stack 
                 |(SPU flight software, interface software, ground station software) check out the HERMESS
                 |repositories on GitHub.
                 |

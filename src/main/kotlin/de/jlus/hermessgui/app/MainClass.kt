@@ -5,6 +5,7 @@ import de.jlus.hermessgui.viewmodel.*
 import javafx.scene.image.Image
 import javafx.stage.Stage
 import tornadofx.*
+import kotlin.system.exitProcess
 
 
 /**
@@ -31,9 +32,12 @@ class MainClass: App(MainView::class, Styles::class) {
             if (!projectVm.closeProject())
                 confirm("Are you sure you want to exit?", "Not all changes were saved!") {
                     stage.close()
+                    exitProcess(0)
                 }
-            else
+            else {
                 stage.close()
+                exitProcess(0)
+            }
         }
 
 

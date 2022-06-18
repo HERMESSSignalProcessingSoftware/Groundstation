@@ -4,8 +4,12 @@ import de.jlus.hermessgui.app.imgTooltip
 import de.jlus.hermessgui.app.regexFileName
 import de.jlus.hermessgui.app.tabIdCalPrefix
 import de.jlus.hermessgui.model.Calibrations
+import de.jlus.hermessgui.model.Dapi
 import de.jlus.hermessgui.viewmodel.CalViewModel
 import de.jlus.hermessgui.viewmodel.ProjectViewModel
+import javafx.beans.property.SimpleDoubleProperty
+import javafx.scene.chart.NumberAxis
+import javafx.scene.chart.XYChart.Series
 import javafx.scene.text.Font
 import tornadofx.*
 import java.io.File
@@ -17,135 +21,150 @@ import java.io.File
 class CalTab: MainTab("ADC Cal") {
     private val vm = CalViewModel(Calibrations())
     private val projectVm by inject<ProjectViewModel>()
+    private val contentWidth = 700.0
 
 
     override val root = scrollpane {
-        gridpane {
-            hgap = 15.0
-            vgap = 15.0
-            paddingAll = 20
-            prefWidth = 700.0 // based on the buttonbar on the bottom - widest object
+        borderpane {
+            paddingAll = 15
+            prefWidth = contentWidth
 
-            row {
+            top = vbox {
+                spacing = 15.0
+
                 label(this@CalTab.tabTitle) {
                     gridpaneConstraints { columnSpan = 3 }
                     font = Font(20.0)
                 }
-            }
 
-            // configuration name
-            row {
-                imageview(imgTooltip) {
-                    tooltip("An identifier for this set of calibration data")
-                }
-                label("Calibration file name: ")
-                textfield(vm.calName).validator {
-                    if (regexFileName.matches(it ?: ""))
-                        null
-                    else
-                        error("The name must match ${regexFileName.pattern}")
-                }
-            }
+                text("""The measurements are only being transmitted at 2Hz, regardless of the samplerate configuration.
+                    |Note however, that a configured samplerate of > 10SPS will negatively influence the measurement
+                    |results. A very good median value can be achieved with around 120 samples. Prior
+                    |to saving the results you should however check, if the measurements are more or less all aligned
+                    |within a reasonably small measurement range.""".trimMargin())
 
-            // list all stamps
-            for (i in vm.stamps.indices) {
-                // stamp heading
-                row {
-                    label("STAMP $i calibration data") {
-                        gridpaneConstraints { columnSpan = 3 }
-                        font = Font(14.0)
+                form {
+                    fieldset {
+                        field("Calibration file name: ") {
+                            imageview(imgTooltip) {
+                                tooltip("An identifier for this set of calibration data")
+                            }
+                            textfield(vm.calName).validator {
+                                if (regexFileName.matches(it ?: ""))
+                                    null
+                                else
+                                    error("The name must match ${regexFileName.pattern}")
+                            }
+                        }
+                        field("Target sample size: ") {
+                            imageview(imgTooltip) {
+                                tooltip("The number of samples to be collected")
+                            }
+                            spinner(
+                                1, Int.MAX_VALUE, vm.targetSize.value, 6,
+                                true, vm.targetSize
+                            )
+                        }
                     }
                 }
-                // dms1
-                row {
-                    imageview(imgTooltip) {
-                        tooltip("Offset calibration data. Check the ADS114x manual for mor information.")
-                    }
-                    label("DMS 1 OFC: ")
-                    spinner(-8388608, 8388607, vm.stamps[i].dms1Ofc.value,
-                        1, true, vm.stamps[i].dms1Ofc).required()
-                }
-                row {
-                    imageview(imgTooltip) {
-                        tooltip("Fullscale calibration data. Check the ADS114x manual for mor information.")
-                    }
-                    label("DMS 1 FSC: ")
-                    spinner(-8388608, 8388607, vm.stamps[i].dms1Fsc.value,
-                        1, true, vm.stamps[i].dms1Fsc).required()
-                }
-                // dms2
-                row {
-                    imageview(imgTooltip) {
-                        tooltip("Offset calibration data. Check the ADS114x manual for mor information.")
-                    }
-                    label("DMS 2 OFC: ")
-                    spinner(-8388608, 8388607, vm.stamps[i].dms2Ofc.value,
-                        1, true, vm.stamps[i].dms2Ofc).required()
-                }
-                row {
-                    imageview(imgTooltip) {
-                        tooltip("Fullscale calibration data. Check the ADS114x manual for mor information.")
-                    }
-                    label("DMS 2 FSC: ")
-                    spinner(-8388608, 8388607, vm.stamps[i].dms2Fsc.value,
-                        1, true, vm.stamps[i].dms2Fsc).required()
-                }
-                // temperature
-                row {
-                    imageview(imgTooltip) {
-                        tooltip("Offset calibration data. Check the ADS114x manual for mor information.")
-                    }
-                    label("Temperature OFC: ")
-                    spinner(-8388608, 8388607, vm.stamps[i].tempOfc.value,
-                        1, true, vm.stamps[i].tempOfc).required()
-                }
-                row {
-                    imageview(imgTooltip) {
-                        tooltip("Fullscale calibration data. Check the ADS114x manual for mor information.")
-                    }
-                    label("Temperature FSC: ")
-                    spinner(-8388608, 8388607, vm.stamps[i].tempFsc.value,
-                        1, true, vm.stamps[i].tempFsc).required()
-                }
-            }
 
-            // buttonbar
-            row {
                 buttonbar {
-                    gridpaneConstraints {
-                        columnSpan = 3
-                    }
                     button("Save") {
                         isDefaultButton = true
                         enableWhen(projectVm.isOpened and vm.valid)
                         action(::saveResource)
                     }
-                    button("Reset fields") {
+                    button("Reset") {
                         enableWhen(vm.dirty)
                         action(vm::rollback)
                     }
+                    button("Start calibration") {
+                        action {
+                            if (vm.actualSize.value > 0) {
+                                confirm("This will override the current values. Continue?") {
+                                    vm.startDataAcquision()
+                                }
+                            }
+                            else
+                                vm.startDataAcquision()
+                        }
+                        disableWhen(vm.calibrationsRunning or Dapi.activePortProperty.isNull)
+                    }
+                    button("Stop calibration") {
+                        action(vm::stopDataAcquisition)
+                        enableWhen(vm.calibrationsRunning and Dapi.activePortProperty.isNotNull)
+                    }
+                }
+
+                vbox {
+                    spacing = 0.0
+                    hbox {
+                        label("Progression for samplesize of ")
+                        label(vm.targetSize)
+                        label(": ")
+                        label(vm.actualSize)
+                    }
+                    progressbar(0.0) {
+                        prefWidth = contentWidth
+                        val targetSize = SimpleDoubleProperty()
+                        targetSize.bind(vm.targetSize)
+                        progressProperty().bind(vm.actualSize / targetSize)
+                    }
                 }
             }
-            row {
-                buttonbar {
-                    gridpaneConstraints {
-                        columnSpan = 3
+
+            center = gridpane {
+                row {
+                    linechart("SGR1", NumberAxis(), NumberAxis()) {
+                        animated = true
+                        xAxis.label = "Time since start [s]"
+                        yAxis.label = "Relative strain"
+                        for (i in vm.datapointsSgr1.indices) {
+                            val series = Series<Number, Number>()
+                            series.data = vm.datapointsSgr1[i]
+                            series.name = "STAMP ${i+1}"
+                            data.add(series)
+                        }
+                        prefWidth = contentWidth
                     }
-                    button("Trigger OFC").action {
-                        information("Not implemented yet")
+                }
+                row {
+                    linechart("SGR2", NumberAxis(), NumberAxis()) {
+                        animated = true
+                        xAxis.label = "Time since start [s]"
+                        yAxis.label = "Relative strain"
+                        for (i in vm.datapointsSgr2.indices) {
+                            val series = Series<Number, Number>()
+                            series.data = vm.datapointsSgr2[i]
+                            series.name = "STAMP ${i+1}"
+                            data.add(series)
+                        }
+                        prefWidth = contentWidth
                     }
-                    button("Trigger FSC").action {
-                        information("Not implemented yet")
-                    }
-                    button("Read calibrations").action {
-                        information("Not implemented yet")
-                    }
-                    button("Write calibrations").action {
-                        information("Not implemented yet")
+                }
+                row {
+                    linechart("RTD", NumberAxis(), NumberAxis()) {
+                        animated = true
+                        xAxis.label = "Time since start [s]"
+                        yAxis.label = "Temperature [°C]"
+                        for (i in vm.datapointsRtd.indices) {
+                            val series = Series<Number, Number>()
+                            series.data = vm.datapointsRtd[i]
+                            series.name = "STAMP ${i+1}"
+                            data.add(series)
+                        }
+                        prefWidth = contentWidth
                     }
                 }
             }
         }
+    }
+
+
+    override fun closeResource(): Boolean {
+        if (Dapi.dpReceiver == vm)
+            Dapi.dpReceiver = null
+        return super.closeResource()
     }
 
 

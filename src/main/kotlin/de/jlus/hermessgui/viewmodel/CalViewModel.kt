@@ -1,6 +1,11 @@
 package de.jlus.hermessgui.viewmodel
 
 import de.jlus.hermessgui.model.Calibrations
+import de.jlus.hermessgui.model.Dapi
+import de.jlus.hermessgui.model.Dataframe
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.collections.ListChangeListener
+import javafx.scene.chart.XYChart
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import tornadofx.*
@@ -14,9 +19,78 @@ import java.lang.NullPointerException
  */
 class CalViewModel(initItem: Calibrations): ItemViewModel<Calibrations>(initItem) {
     private val projectVm by inject<ProjectViewModel>()
+    private val dataframes = observableListOf<Dataframe>()
+    val calibrationsRunning = SimpleBooleanProperty(false)
 
     val calName = bind(Calibrations::calName)
-    val stamps = Array(3) {Stamp(this, it)}
+    val targetSize = bind(Calibrations::targetSize)
+    val actualSize = bind(Calibrations::actualSize)
+    val datapointsSgr1 = List(6) { observableListOf<XYChart.Data<Number, Number>>() }
+    val datapointsSgr2 = List(6) { observableListOf<XYChart.Data<Number, Number>>() }
+    val datapointsRtd = List(6) { observableListOf<XYChart.Data<Number, Number>>() }
+
+
+    fun startDataAcquision () {
+        if (Dapi.dpReceiver == null) {
+            dataframes.clear()
+            actualSize.value = 0
+            calibrationsRunning.value = true
+            Dapi.dpReceiver = this
+            Dapi.commandSetLiveDataAcquisition(true)
+        }
+    }
+
+
+    fun stopDataAcquisition () {
+        Dapi.commandSetLiveDataAcquisition(false)
+        calibrationsRunning.value = false
+        Dapi.dpReceiver = null
+    }
+
+
+    /**
+     * Make sure to keep the dataframes list and the measurement values in sync
+     */
+    init {
+        rebind {
+            dataframes.bind(item.dataframes) { it }
+        }
+        dataframes.onChange { change: ListChangeListener.Change<out Dataframe> ->
+            while (change.next()) {
+                // handle the added items
+                if (change.wasAdded()) {
+                    for (df in change.addedSubList) {
+                        datapointsSgr1[df.stampId].add(XYChart.Data(df.timestamp.inWholeSeconds, df.sgr1))
+                        datapointsSgr2[df.stampId].add(XYChart.Data(df.timestamp.inWholeSeconds, df.sgr2))
+                        // TODO convert to temperature
+                        datapointsRtd[df.stampId].add(XYChart.Data(df.timestamp.inWholeSeconds, df.rtd))
+                    }
+                }
+                if (change.wasRemoved()) {
+                    // handled removed items
+                    for (df in change.removed) {
+                        datapointsSgr1[df.stampId].removeIf { it.xValue == df.timestamp.inWholeSeconds }
+                        datapointsSgr2[df.stampId].removeIf { it.xValue == df.timestamp.inWholeSeconds }
+                        datapointsRtd[df.stampId].removeIf { it.xValue == df.timestamp.inWholeSeconds }
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * inserts the received datapackage to the calibration model
+     * and marks the model dirty
+     */
+    fun receiveDatapackage (dp: List<Dataframe>) {
+        for (df in dp) {
+            dataframes.add(df)
+            actualSize.value++
+        }
+        if (actualSize.value >= targetSize.value)
+            stopDataAcquisition()
+    }
 
 
     /**
@@ -44,6 +118,9 @@ class CalViewModel(initItem: Calibrations): ItemViewModel<Calibrations>(initItem
             }
         }
 
+        val frameCopy = List(dataframes.size) { dataframes[it] }
+        item.dataframes.clear()
+        item.dataframes.addAll(frameCopy)
         // write to file
         try {
             item.saveToFile(newFile)
@@ -71,15 +148,5 @@ class CalViewModel(initItem: Calibrations): ItemViewModel<Calibrations>(initItem
             error(ex.message ?: ex.stackTraceToString())
         }
         return false
-    }
-
-
-    class Stamp (vm: CalViewModel, index: Int) {
-        val dms1Ofc = vm.bind {vm.item.stamps[index].dms1Ofc}
-        val dms1Fsc = vm.bind {vm.item.stamps[index].dms1Fsc}
-        val dms2Ofc = vm.bind {vm.item.stamps[index].dms2Ofc}
-        val dms2Fsc = vm.bind {vm.item.stamps[index].dms2Fsc}
-        val tempOfc = vm.bind {vm.item.stamps[index].tempOfc}
-        val tempFsc = vm.bind {vm.item.stamps[index].tempFsc}
     }
 }

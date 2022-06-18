@@ -8,8 +8,9 @@
       <configuration version="3" platform="JVM 1.8" allPlatforms="JVM [1.8]" useProjectSettings="false">
         <compilerSettings />
         <compilerArguments>
-          <option name="languageVersion" value="1.6" />
-          <option name="apiVersion" value="1.6" />
+          <option name="jvmTarget" value="1.8" />
+          <option name="languageVersion" value="1.7" />
+          <option name="apiVersion" value="1.7" />
           <option name="pluginOptions">
             <array />
           </option>
@@ -33,27 +34,27 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.6.21" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.6.21" level="project" />
+    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains:annotations:13.0" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-reflect:1.6.21" level="project" />
+    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-reflect:1.7.0" level="project" />
     <orderEntry type="library" name="Maven: no.tornado:tornadofx:1.7.20" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish:javax.json:1.1.2" level="project" />
     <orderEntry type="library" name="Maven: javax.json:javax.json-api:1.1.2" level="project" />
     <orderEntry type="library" name="Maven: no.tornado:tornadofx-controlsfx:0.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.14" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:win:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:win:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:win:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:15.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:15.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:win:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-web:win:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-media:win:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:win:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:18.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:win:18.0.1" level="project" />
     <orderEntry type="library" name="Maven: com.fazecast:jSerialComm:2.9.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.0" level="project" />
   </component>
 </module>

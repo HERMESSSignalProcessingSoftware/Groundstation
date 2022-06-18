@@ -4,7 +4,7 @@ import com.fazecast.jSerialComm.SerialPort
 import javafx.scene.image.Image
 
 // versions
-const val thisVersion = "0.0.1"
+const val thisVersion = "1.0.0"
 const val dapiVersion = "1.0.0"
 const val tmVersion = "Not supported"
 

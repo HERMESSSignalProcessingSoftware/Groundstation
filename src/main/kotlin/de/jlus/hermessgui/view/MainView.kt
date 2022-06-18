@@ -24,7 +24,6 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
     private val projectVm by inject<ProjectViewModel>()
     private val tmVm by inject<TmViewModel>()
     private val loggerVm by inject<LoggerViewModel>()
-    private val dapi = Dapi()
 
     private val progressValue = SimpleDoubleProperty(0.0)
     private val tabPane = TabPane()
@@ -57,7 +56,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 menu("DAPI: Connect") {
                     // save all menu items of the lists
                     val portItems = mutableListOf<MenuItem>()
-                    dapi.ports.onChange {
+                    Dapi.ports.onChange {
                         // delete all menu items
                         for (rem in portItems) {
                             items.remove(rem)
@@ -65,22 +64,23 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                         // add new elements for the ports
                         for (added in it.list) {
                             val menuItem = item(added.descriptivePortName)
-                            menuItem.action { dapi.connect(added) }
+                            menuItem.action { Dapi.connect(added) }
                             portItems.add(menuItem)
                         }
                     }
                     // display reload ports button
-                    enableWhen(dapi.activePortProperty.isNull)
-                    item("Reload ports").action(dapi::reloadPorts)
+                    enableWhen(Dapi.activePortProperty.isNull)
+                    item("Reload ports").action(Dapi::reloadPorts)
                     separator()
+                    Dapi.reloadPorts()
                 }
                 item("DAPI: Disconnect") {
-                    disableWhen(dapi.activePortProperty.isNull)
-                    action(dapi::disconnect)
+                    disableWhen(Dapi.activePortProperty.isNull)
+                    action(Dapi::disconnect)
                 }
                 item("DAPI: Configure").action { openMainTab(::SPUConfigTab) }
                 item("DAPI: ADC calibrations").action { openMainTab(::CalTab) }
-                item("DAPI: Readout measurements")
+                item("DAPI: Readout measurements").action { warning("Not implemented yet") }
                 separator()
                 menu("TM: Connect") {
                     enableWhen(tmVm.itemProperty.isNull)
@@ -186,7 +186,7 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                     }
                 }
                 // calibration drawer item
-                item("Calibrations", ImageView("imgs/icon-cal-20.png"), expanded = false, showHeader = true) {
+                item("Calibrations", ImageView("imgs/icon-cal-20.png"), expanded = true, showHeader = true) {
                     vbox {
                         listview(projectVm.calFiles) {
                             configureFileList {

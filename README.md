@@ -16,11 +16,10 @@ _.herconf_, _.hercal_, _.hermeas_
 
 ### DAPI Features
 Supports data-and-programming-interface (DAPI) protocol 0.0.1
-- [ ] Connect via DAPI
-- [ ] Configure SPU
-- [ ] Transfer initial ADC calibration data
+- [X] Connect via DAPI
+- [X] Configure SPU
+- [X] Receive calibration life data
 - [ ] Read out and store measurements
-- [ ] Read out and store metadata
 
 ### TM Features
 Supports telemetry (TM) protocol 0.0.1

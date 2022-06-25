@@ -1,16 +1,20 @@
 package de.jlus.hermessgui.view
 
 import de.jlus.hermessgui.app.*
+import de.jlus.hermessgui.model.Dapi
 import de.jlus.hermessgui.model.SPUConfig
 import de.jlus.hermessgui.viewmodel.ProjectViewModel
 import de.jlus.hermessgui.viewmodel.SPUConfViewModel
+import javafx.scene.control.TextFormatter
+import javafx.scene.control.ToggleGroup
 import javafx.scene.text.Font
+import javafx.util.converter.IntegerStringConverter
 import tornadofx.*
 import java.io.File
 
 
 /**
- * A MainTab displaying either the
+ * A MainTab enabling the change of the spu configurations
  */
 class SPUConfigTab: MainTab("SPU Conf") {
     private val vm = SPUConfViewModel(SPUConfig())
@@ -46,34 +50,16 @@ class SPUConfigTab: MainTab("SPU Conf") {
                 }
                 label("Configuration name: ")
                 textfield(vm.confName).validator {
-                    if (regexFileName.matches(it ?: ""))
+                    if (regexSPUConfName.matches(it ?: ""))
                         null
                     else
                         error("The name must match ${regexFileName.pattern}")
                 }
             }
-            // override Master/Slave
-            row {
-                imageview(imgTooltip) {
-                    tooltip("Override the hardware jumper for primary/secondary mode")
-                }
-                label("Ovrd mode: ")
-                combobox(vm.ovrdMode, SPUConfOverrideMode.values().toList()) {
-                    cellFormat { text = it.text }
-                }
-            }
-            // sleep mode
-            row {
-                imageview(imgTooltip) {
-                    tooltip("Do not use any capabilities of the SPU until the next configuration.")
-                }
-                label("Put SPU in sleep: ")
-                checkbox("Put into sleep", vm.sleep)
-            }
 
             // heading: Strain gauge rosettes (DMS) settings
             row {
-                label("Strain gauge rosettes (DMS) ADC settings") {
+                label("Strain gauge rosettes (SGR) ADC settings") {
                     gridpaneConstraints { columnSpan = 3 }
                     font = Font(14.0)
                 }
@@ -81,14 +67,18 @@ class SPUConfigTab: MainTab("SPU Conf") {
             // read from configuration storage
             row {
                 imageview(imgTooltip) {
-                    tooltip("Loads the prerecorded data for offset and full-scale calibration " +
-                            "into the ADCs.")
+                    tooltip("Performs either a system or self offset calibration when powering the SPU. An " +
+                            "offset calibration sets the ADCs zero reference to either the entire measurement system" +
+                            "zero-volt deviance or only the ADCs internal zero-volt deviance.")
                 }
-                label("Initiate with calibration replay: ")
+                label("Initiate with ADC calibration: ")
                 vbox {
                     spacing = 10.0
-                    checkbox("Offset calibration register", vm.dmsOffsetCalInit)
-                    checkbox("Full-scale calibration register", vm.dmsFullscaleCalInit)
+                    val tg = ToggleGroup()
+                    radiobutton("None", tg, SPUConfCalibrationTypes.None)
+                    radiobutton("Self offset calibration", tg, SPUConfCalibrationTypes.SelfOffset)
+                    radiobutton("System offset calibration", tg, SPUConfCalibrationTypes.SystemOffset)
+                    tg.bind(vm.sgrOffsetCalInit)
                 }
             }
             // samplerate adcs for strain gauge
@@ -97,8 +87,8 @@ class SPUConfigTab: MainTab("SPU Conf") {
                     tooltip("Select the ADC samplerate. Check the TI ADS1147 datasheet for data on input " +
                             "accuracy for every setting.")
                 }
-                label("DMS ADC Samplerate: ")
-                combobox(vm.dmsSamplerate, SPUConfSamplerate.values().toList()) {
+                label("SGR ADC Samplerate: ")
+                combobox(vm.sgrSamplerate, SPUConfSamplerate.values().toList()) {
                     cellFormat { text = it.text }
                 }
             }
@@ -108,15 +98,15 @@ class SPUConfigTab: MainTab("SPU Conf") {
                     tooltip("Select the ADC programmable gain amplifier value. Make sure to set for a " +
                             "proper value to include the highest interesting values.")
                 }
-                label("DMS ADC PGA: ")
-                combobox(vm.dmsPGA, SPUConfPGA.values().toList()) {
-                    cellFormat { text = it.numeric.toString() }
+                label("SGR ADC PGA: ")
+                combobox(vm.sgrPGA, SPUConfPGA.values().toList()) {
+                    cellFormat { text = it.text }
                 }
             }
 
             // heading: temperature (PT-100) settings
             row {
-                label("Temperature (PT-100) ADC settings") {
+                label("Resistive temperature detector (RTD) ADC settings") {
                     gridpaneConstraints { columnSpan = 3 }
                     font = Font(14.0)
                 }
@@ -124,14 +114,18 @@ class SPUConfigTab: MainTab("SPU Conf") {
             // read from configuration storage
             row {
                 imageview(imgTooltip) {
-                    tooltip("Loads the prerecorded data for offset and full-scale calibration " +
-                            "into the ADCs.")
+                    tooltip("Performs either a system or self offset calibration when powering the SPU. An " +
+                            "offset calibration sets the ADCs zero reference to either the entire measurement system" +
+                            "zero-volt deviance or only the ADCs internal zero-volt deviance.")
                 }
                 label("Initiate with calibration replay: ")
                 vbox {
                     spacing = 10.0
-                    checkbox("Offset calibration register", vm.pt100OffsetCalInit)
-                    checkbox("Full-scale calibration register", vm.pt100FullscaleCalInit)
+                    val tg = ToggleGroup()
+                    radiobutton("None", tg, SPUConfCalibrationTypes.None)
+                    radiobutton("Self offset calibration", tg, SPUConfCalibrationTypes.SelfOffset)
+                    radiobutton("System offset calibration", tg, SPUConfCalibrationTypes.SystemOffset)
+                    tg.bind(vm.rtdOffsetCalInit)
                 }
             }
             // samplerate adcs for pt-100
@@ -140,20 +134,20 @@ class SPUConfigTab: MainTab("SPU Conf") {
                     tooltip("Select the ADC samplerate. Check the TI ADS1147 datasheet for data on input " +
                             "accuracy for every setting.")
                 }
-                label("PT-100 ADC Samplerate: ")
-                combobox(vm.pt100Samplerate, SPUConfSamplerate.values().toList()) {
+                label("RTD ADC Samplerate: ")
+                combobox(vm.rtdSamplerate, SPUConfSamplerate.values().toList()) {
                     cellFormat { text = it.text }
                 }
             }
-            // adc pgas for pt-100
+            // adc pgas for rtd
             row {
                 imageview(imgTooltip) {
                     tooltip("Select the ADC programmable gain amplifier value. Make sure to set for a " +
                             "proper value to include the highest interesting values.")
                 }
-                label("PT-100 ADC PGA: ")
-                combobox(vm.pt100PGA, SPUConfPGA.values().toList()) {
-                    cellFormat { text = it.numeric.toString() }
+                label("RTD ADC PGA: ")
+                combobox(vm.rtdPGA, SPUConfPGA.values().toList()) {
+                    cellFormat { text = it.text }
                 }
             }
 
@@ -167,42 +161,14 @@ class SPUConfigTab: MainTab("SPU Conf") {
             // enable saving measurements or metadata
             row {
                 imageview(imgTooltip) {
-                    tooltip("Enables the storage of metadata or measurement data. Disable to " +
-                            "safe lifecycles on the flash.")
+                    tooltip("Enables the storage of metadata and measurement data. Disable to " +
+                            "safe lifecycles on the flash. Clear the flash whenever SOE is read as true.")
                 }
                 label("Enable storage of: ")
                 vbox {
                     spacing = 10.0
-                    checkbox("Measurements", vm.storeMeasurementsEnabled)
-                    checkbox("Metadata", vm.storeMetadataEnabled)
-                }
-            }
-            // start storage on
-            row {
-                imageview(imgTooltip) {
-                    tooltip("If any of the conditions are met, start the recording of " +
-                            "measurements and metadata.")
-                }
-                label("Start recordings on [ANY HIGH]: ")
-                hbox {
-                    spacing = 10.0
-                    checkbox("LO", vm.storeStartOnLo)
-                    checkbox("SOE", vm.storeStartOnSOE)
-                    checkbox("SODS", vm.storeStartOnSODS)
-                }
-            }
-            // stop storage on
-            row {
-                imageview(imgTooltip) {
-                    tooltip("If all of the conditions are met, stop the recording of " +
-                            "measurements and metadata.")
-                }
-                label("Stop recordings on [ALL LOW]: ")
-                hbox {
-                    spacing = 10.0
-                    checkbox("LO", vm.storeStopOnLo)
-                    checkbox("SOE", vm.storeStopOnSOE)
-                    checkbox("SODS", vm.storeStopOnSODS)
+                    checkbox("Enable storage measurements on SODS true", vm.storeOnSodsEnabled)
+                    checkbox("Enable clear measurements on SOE true", vm.clearOnSoeEnabled)
                 }
             }
             // minimum and maximum recording time
@@ -217,13 +183,33 @@ class SPUConfigTab: MainTab("SPU Conf") {
                     spacing = 10.0
                     hbox {
                         label("Min [s]: ")
-                        spinner(0, Int.MAX_VALUE, vm.storeMinTime.value,
-                            1, true, vm.storeMinTime).required()
+                        spinner(0, maxRecordingTimeSeconds, vm.storeMinTime.value,
+                            1, true, vm.storeMinTime) {
+                            validator {
+                                if (it == null || it.toInt() < vm.storeMaxTime.value)
+                                    null
+                                else
+                                    error("Value must be smaller than the max value")
+                            }
+                            editor.textFormatter = TextFormatter(IntegerStringConverter(), vm.storeMinTime.value) {
+                                if (it.isContentChange && it.controlNewText.toIntOrNull() == null) null else it
+                            }
+                        }
                     }
                     hbox {
                         label("Max [s]: ")
-                        spinner(0, Int.MAX_VALUE, vm.storeMaxTime.value,
-                            1, true, vm.storeMaxTime).required()
+                        spinner(0, maxRecordingTimeSeconds, vm.storeMaxTime.value,
+                            1, true, vm.storeMaxTime) {
+                            validator {
+                                if (it == null || it.toInt() > vm.storeMinTime.value)
+                                    null
+                                else
+                                    error("Value must be greater than the min value")
+                            }
+                            editor.textFormatter = TextFormatter(IntegerStringConverter(), vm.storeMaxTime.value) {
+                                if (it.isContentChange && it.controlNewText.toIntOrNull() == null) null else it
+                            }
+                        }
                     }
                 }
             }
@@ -259,11 +245,13 @@ class SPUConfigTab: MainTab("SPU Conf") {
                         enableWhen(vm.dirty)
                         action(vm::rollback)
                     }
-                    button("Program SPU").action {
-                        information("Not implemented yet")
+                    button("Program SPU") {
+                        enableWhen(Dapi.activePortProperty.isNotNull and vm.dirty.not())
+                        action(vm::writeSpuConfig)
                     }
-                    button("Read SPU configurations").action {
-                        information("Not implemented yet")
+                    button("Read SPU configurations") {
+                        enableWhen(Dapi.activePortProperty.isNotNull and vm.dirty.not())
+                        action(vm::readSpuConfig)
                     }
                 }
             }

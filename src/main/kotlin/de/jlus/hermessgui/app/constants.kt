@@ -4,8 +4,8 @@ import com.fazecast.jSerialComm.SerialPort
 import javafx.scene.image.Image
 
 // versions
-const val thisVersion = "1.0.0"
-const val dapiVersion = "1.0.0"
+const val thisVersion = "1.1.0"
+const val dapiVersion = "1.1.0"
 const val tmVersion = "Not supported"
 
 // tabIds
@@ -21,8 +21,9 @@ val imgRefresh16 = Image("imgs/icon-refresh-16.png")
 val imgClear16 = Image("imgs/icon-clear-16.png")
 
 // regex
-val regexProjectName = Regex("[A-Za-z0-9]{1,20}")
-val regexFileName = Regex("[A-Za-z0-9 _]{0,20}[A-Za-z0-9]")
+val regexProjectName = Regex("""[A-Za-z\d]{1,20}""")
+val regexFileName = Regex("""[A-Za-z\d _]{0,20}[A-Za-z\d]""")
+val regexSPUConfName = Regex("""[A-Za-z\d _]{0,15}[A-Za-z\d]""")
 
 // dapi connection
 const val dapiBaudrate = 115200
@@ -31,30 +32,55 @@ const val dapiStopBits = SerialPort.ONE_STOP_BIT
 const val dapiDataBits = 8
 
 // enums for SPU configuration
-enum class SPUConfOverrideMode (val text: String) {
-    NONE("No override (jumper setting)"),
-    PRIMARY("Primary"),
-    SECONDARY("Secondary")
-}
+const val maxRecordingTimeSeconds = 3600
 enum class SPUConfSamplerate (val numeric: Int, val text: String) {
-    SR_5(5, "5 SPS"),
-    SR_10(10, "10 SPS"),
-    SR_20(20, "20 SPS"),
-    SR_40(40, "40 SPS"),
-    SR_80(80, "80 SPS"),
-    SR_160(160, "160 SPS"),
-    SR_320(320, "320 SPS"),
-    SR_640(640, "640 SPS"),
-    SR_1000(1000, "1k SPS"),
-    SR_2000(2000, "2k SPS")
+    SR_5(0, "5 SPS"),
+    SR_10(1, "10 SPS"),
+    SR_20(2, "20 SPS"),
+    SR_40(3, "40 SPS"),
+    SR_80(4, "80 SPS"),
+    SR_160(5, "160 SPS"),
+    SR_320(6, "320 SPS"),
+    SR_640(7, "640 SPS"),
+    SR_1000(8, "1k SPS"),
+    SR_2000(9, "2k SPS");
+    companion object {
+        fun fromNumeric (numeric: Int): SPUConfSamplerate {
+            for (item in SPUConfSamplerate.values())
+                if (item.numeric == numeric)
+                    return item
+            return SR_5
+        }
+    }
 }
-enum class SPUConfPGA (val numeric: Int) {
-    PGA_1(1),
-    PGA_2(2),
-    PGA_4(4),
-    PGA_8(8),
-    PGA_16(16),
-    PGA_32(32),
-    PGA_64(64),
-    PGA_128(128)
+enum class SPUConfPGA (val numeric: Int, val text: String) {
+    PGA_1(0 shl 4, "1"),
+    PGA_2(1 shl 4, "2"),
+    PGA_4(2 shl 4, "4"),
+    PGA_8(3 shl 4, "8"),
+    PGA_16(4 shl 4, "16"),
+    PGA_32(5 shl 4, "32"),
+    PGA_64(6 shl 4, "64"),
+    PGA_128(7 shl 4, "128");
+    companion object {
+        fun fromNumeric (numeric: Int): SPUConfPGA {
+            for (item in SPUConfPGA.values())
+                if (item.numeric == numeric)
+                    return item
+            return PGA_1
+        }
+    }
+}
+enum class SPUConfCalibrationTypes (val numeric: Int) {
+    None(0),
+    SelfOffset(2),
+    SystemOffset(1);
+    companion object {
+        fun fromNumeric (numeric: Int): SPUConfCalibrationTypes {
+            for (item in SPUConfCalibrationTypes.values())
+                if (item.numeric == numeric)
+                    return item
+            return None
+        }
+    }
 }

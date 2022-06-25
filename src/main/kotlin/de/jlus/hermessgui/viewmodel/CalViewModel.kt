@@ -62,7 +62,6 @@ class CalViewModel(initItem: Calibrations): ItemViewModel<Calibrations>(initItem
                     for (df in change.addedSubList) {
                         datapointsSgr1[df.stampId].add(XYChart.Data(df.timestamp.inWholeSeconds, df.sgr1))
                         datapointsSgr2[df.stampId].add(XYChart.Data(df.timestamp.inWholeSeconds, df.sgr2))
-                        // TODO convert to temperature
                         datapointsRtd[df.stampId].add(XYChart.Data(df.timestamp.inWholeSeconds, df.rtd))
                     }
                 }

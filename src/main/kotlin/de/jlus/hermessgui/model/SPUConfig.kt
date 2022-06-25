@@ -1,6 +1,6 @@
 package de.jlus.hermessgui.model
 
-import de.jlus.hermessgui.app.SPUConfOverrideMode
+import de.jlus.hermessgui.app.SPUConfCalibrationTypes
 import de.jlus.hermessgui.app.SPUConfPGA
 import de.jlus.hermessgui.app.SPUConfSamplerate
 import javafx.beans.property.*
@@ -16,31 +16,21 @@ import javax.json.JsonObject
 class SPUConfig: JsonModel {
     // General SPU settings
     val confNameProperty = SimpleStringProperty("UNDEFINED")
-    val ovrdModeProperty = SimpleObjectProperty(SPUConfOverrideMode.NONE)
-    val sleepProperty = SimpleBooleanProperty(false)
     // dms adc settings
-    val dmsOffsetCalInitProperty = SimpleBooleanProperty(false)
-    val dmsFullscaleCalInitProperty = SimpleBooleanProperty(false)
-    val dmsSamplerateProperty = SimpleObjectProperty(SPUConfSamplerate.SR_2000)
-    val dmsPGAProperty = SimpleObjectProperty(SPUConfPGA.PGA_128)
+    val sgrOffsetCalInitProperty = SimpleObjectProperty(SPUConfCalibrationTypes.SystemOffset)
+    val sgrSamplerateProperty = SimpleObjectProperty(SPUConfSamplerate.SR_1000)
+    val sgrPGAProperty = SimpleObjectProperty(SPUConfPGA.PGA_64)
     // pt100 adc settings
-    val pt100OffsetCalInitProperty = SimpleBooleanProperty(false)
-    val pt100FullscaleCalInitProperty = SimpleBooleanProperty(false)
-    val pt100SamplerateProperty = SimpleObjectProperty(SPUConfSamplerate.SR_5)
-    val pt100PGAProperty = SimpleObjectProperty(SPUConfPGA.PGA_128)
+    val rtdOffsetCalInitProperty = SimpleObjectProperty(SPUConfCalibrationTypes.SelfOffset)
+    val rtdSamplerateProperty = SimpleObjectProperty(SPUConfSamplerate.SR_10)
+    val rtdPGAProperty = SimpleObjectProperty(SPUConfPGA.PGA_16)
     // data storage settings
-    val storeMeasurementsEnabledProperty = SimpleBooleanProperty(false)
-    val storeMetadataEnabledProperty = SimpleBooleanProperty(false)
-    val storeStartOnLOProperty = SimpleBooleanProperty(false)
-    val storeStartOnSOEProperty = SimpleBooleanProperty(false)
-    val storeStartOnSODSProperty = SimpleBooleanProperty(false)
-    val storeStopOnLOProperty = SimpleBooleanProperty(false)
-    val storeStopOnSOEProperty = SimpleBooleanProperty(false)
-    val storeStopOnSODSProperty = SimpleBooleanProperty(false)
+    val storeOnSodsEnabledProperty = SimpleBooleanProperty(true)
+    val clearOnSoeEnabledProperty = SimpleBooleanProperty(false)
     val storeMinTimeProperty = SimpleIntegerProperty(0)
-    val storeMaxTimeProperty = SimpleIntegerProperty(Int.MAX_VALUE)
+    val storeMaxTimeProperty = SimpleIntegerProperty(800)
     // TM settings
-    val tmEnabledProperty = SimpleBooleanProperty(false)
+    val tmEnabledProperty = SimpleBooleanProperty(true)
 
 
     /**
@@ -76,31 +66,21 @@ class SPUConfig: JsonModel {
         try {
             with(json) {
                 confNameProperty.value = string("confName")!!
-                ovrdModeProperty.value = SPUConfOverrideMode.valueOf(string("ovrdMode")!!)
-                sleepProperty.value = bool("sleep")!!
-                with(jsonObject("dms")!!) {
-                    dmsOffsetCalInitProperty.value = bool("offsetCalInit")!!
-                    dmsFullscaleCalInitProperty.value = bool("fullscaleCalInit")!!
-                    dmsSamplerateProperty.value = SPUConfSamplerate.valueOf(string("samplerate")!!)
-                    dmsPGAProperty.value = SPUConfPGA.valueOf(string("pga")!!)
+                with(jsonObject("sgr")!!) {
+                    sgrOffsetCalInitProperty.value = SPUConfCalibrationTypes.valueOf(string("offsetCalInit")!!)
+                    sgrSamplerateProperty.value = SPUConfSamplerate.valueOf(string("samplerate")!!)
+                    sgrPGAProperty.value = SPUConfPGA.valueOf(string("pga")!!)
                 }
-                with(jsonObject("pt100")!!) {
-                    pt100OffsetCalInitProperty.value = bool("offsetCalInit")!!
-                    pt100FullscaleCalInitProperty.value = bool("fullscaleCalInit")!!
-                    pt100SamplerateProperty.value = SPUConfSamplerate.valueOf(string("samplerate")!!)
-                    pt100PGAProperty.value = SPUConfPGA.valueOf(string("pga")!!)
+                with(jsonObject("rtd")!!) {
+                    rtdOffsetCalInitProperty.value = SPUConfCalibrationTypes.valueOf(string("offsetCalInit")!!)
+                    rtdSamplerateProperty.value = SPUConfSamplerate.valueOf(string("samplerate")!!)
+                    rtdPGAProperty.value = SPUConfPGA.valueOf(string("pga")!!)
                 }
                 with(jsonObject("storage")!!) {
-                    storeMeasurementsEnabledProperty.value = bool("measurementsEnabled")!!
-                    storeMetadataEnabledProperty.value = bool("metadataEnabled")!!
-                    storeStartOnLOProperty.value = bool("startOnLO")!!
-                    storeStartOnSOEProperty.value = bool("startOnSOE")!!
-                    storeStartOnSODSProperty.value = bool("startOnSODS")!!
-                    storeStopOnLOProperty.value = bool("stopOnLO")!!
-                    storeStopOnSOEProperty.value = bool("stopOnSOE")!!
-                    storeStopOnSODSProperty.value = bool("stopOnSODS")!!
-                    storeMinTimeProperty.value = int("minTime")!!
+                    storeOnSodsEnabledProperty.value = bool("storeOnSodsEnabled")!!
+                    clearOnSoeEnabledProperty.value = bool("clearOnSoeEnabled")!!
                     storeMaxTimeProperty.value = int("maxTime")!!
+                    storeMinTimeProperty.value = int("minTime")!!
                 }
                 with(jsonObject("tm")!!) {
                     tmEnabledProperty.value = bool("enabled")!!
@@ -122,29 +102,19 @@ class SPUConfig: JsonModel {
     override fun toJSON (json: JsonBuilder) {
         with(json) {
             add("confName", confNameProperty.value)
-            add("ovrdMode", ovrdModeProperty.value.name)
-            add("sleep", sleepProperty.value)
-            add("dms", JsonBuilder().apply {
-                add("offsetCalInit", dmsOffsetCalInitProperty.value)
-                add("fullscaleCalInit", dmsFullscaleCalInitProperty.value)
-                add("samplerate", dmsSamplerateProperty.value.name)
-                add("pga", dmsPGAProperty.value.name)
+            add("sgr", JsonBuilder().apply {
+                add("offsetCalInit", sgrOffsetCalInitProperty.value.name)
+                add("samplerate", sgrSamplerateProperty.value.name)
+                add("pga", sgrPGAProperty.value.name)
             })
-            add("pt100", JsonBuilder().apply {
-                add("offsetCalInit", pt100OffsetCalInitProperty.value)
-                add("fullscaleCalInit", pt100FullscaleCalInitProperty.value)
-                add("samplerate", pt100SamplerateProperty.value.name)
-                add("pga", pt100PGAProperty.value.name)
+            add("rtd", JsonBuilder().apply {
+                add("offsetCalInit", rtdOffsetCalInitProperty.value.name)
+                add("samplerate", rtdSamplerateProperty.value.name)
+                add("pga", rtdPGAProperty.value.name)
             })
             add("storage", JsonBuilder().apply {
-                add("measurementsEnabled", storeMeasurementsEnabledProperty.value)
-                add("metadataEnabled", storeMetadataEnabledProperty.value)
-                add("startOnLO", storeStartOnLOProperty.value)
-                add("startOnSOE", storeStartOnSOEProperty.value)
-                add("startOnSODS", storeStartOnSODSProperty.value)
-                add("stopOnLO", storeStopOnLOProperty.value)
-                add("stopOnSOE", storeStopOnSOEProperty.value)
-                add("stopOnSODS", storeStopOnSODSProperty.value)
+                add("storeOnSodsEnabled", storeOnSodsEnabledProperty.value)
+                add("clearOnSoeEnabled", clearOnSoeEnabledProperty.value)
                 add("minTime", storeMinTimeProperty.value)
                 add("maxTime", storeMaxTimeProperty.value)
             })

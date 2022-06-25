@@ -1,5 +1,6 @@
 package de.jlus.hermessgui.viewmodel
 
+import de.jlus.hermessgui.model.Dapi
 import de.jlus.hermessgui.model.SPUConfig
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
@@ -17,27 +18,17 @@ class SPUConfViewModel(initItem: SPUConfig): ItemViewModel<SPUConfig>(initItem) 
 
     // general SPU settings
     val confName = bind(SPUConfig::confNameProperty)
-    val ovrdMode = bind(SPUConfig::ovrdModeProperty)
-    val sleep = bind(SPUConfig::sleepProperty)
     // dms adc settings
-    val dmsOffsetCalInit = bind(SPUConfig::dmsOffsetCalInitProperty)
-    val dmsFullscaleCalInit = bind(SPUConfig::dmsFullscaleCalInitProperty)
-    val dmsSamplerate = bind(SPUConfig::dmsSamplerateProperty)
-    val dmsPGA = bind(SPUConfig::dmsPGAProperty)
+    val sgrOffsetCalInit = bind(SPUConfig::sgrOffsetCalInitProperty)
+    val sgrSamplerate = bind(SPUConfig::sgrSamplerateProperty)
+    val sgrPGA = bind(SPUConfig::sgrPGAProperty)
     // pt100 adc settings
-    val pt100OffsetCalInit = bind(SPUConfig::pt100OffsetCalInitProperty)
-    val pt100FullscaleCalInit = bind(SPUConfig::pt100FullscaleCalInitProperty)
-    val pt100Samplerate = bind(SPUConfig::pt100SamplerateProperty)
-    val pt100PGA = bind(SPUConfig::pt100PGAProperty)
+    val rtdOffsetCalInit = bind(SPUConfig::rtdOffsetCalInitProperty)
+    val rtdSamplerate = bind(SPUConfig::rtdSamplerateProperty)
+    val rtdPGA = bind(SPUConfig::rtdPGAProperty)
     // data storage settings
-    val storeMeasurementsEnabled = bind(SPUConfig::storeMeasurementsEnabledProperty)
-    val storeMetadataEnabled = bind(SPUConfig::storeMetadataEnabledProperty)
-    val storeStartOnLo = bind(SPUConfig::storeStartOnLOProperty)
-    val storeStartOnSOE = bind(SPUConfig::storeStartOnSOEProperty)
-    val storeStartOnSODS = bind(SPUConfig::storeStartOnSODSProperty)
-    val storeStopOnLo = bind(SPUConfig::storeStopOnLOProperty)
-    val storeStopOnSOE = bind(SPUConfig::storeStopOnSOEProperty)
-    val storeStopOnSODS = bind(SPUConfig::storeStopOnSODSProperty)
+    val storeOnSodsEnabled = bind(SPUConfig::storeOnSodsEnabledProperty)
+    val clearOnSoeEnabled = bind(SPUConfig::clearOnSoeEnabledProperty)
     val storeMinTime = bind(SPUConfig::storeMinTimeProperty)
     val storeMaxTime = bind(SPUConfig::storeMaxTimeProperty)
     // TM settings
@@ -96,5 +87,23 @@ class SPUConfViewModel(initItem: SPUConfig): ItemViewModel<SPUConfig>(initItem) 
             error(ex.message ?: ex.stackTraceToString())
         }
         return false
+    }
+
+
+    /**
+     * Writes the currently saved configuration to the SPU. This function should therefore only be called when
+     * the model is not dirty.
+     */
+    fun writeSpuConfig () {
+        Dapi.commandWriteSPUConf(item)
+    }
+
+
+    /**
+     * Reads the configuration and updates all fields in the viewmodel but not the underlying model
+     */
+    fun readSpuConfig () {
+        Dapi.confReceiver = this
+        Dapi.commandReadSPUConf()
     }
 }

@@ -1,11 +1,11 @@
-/* Not working for non obvious reasons. Screw it and try again later
-module seriesDatabase {
+/* TODO !!! do that later
+module hermessgui {
     requires tornadofx;
     requires tornadofx.controlsfx;
     requires javafx.base;
     requires javafx.controls;
     requires javafx.graphics;
     requires kotlin.stdlib;
-    opens de.jlus.seriesdb.app;
-    opens de.jlus.seriesdb.view;
+    opens de.jlus.hermessgui.app;
+    opens de.jlus.hermessgui.view;
 }*/

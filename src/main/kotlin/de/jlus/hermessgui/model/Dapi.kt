@@ -7,6 +7,7 @@ import com.fazecast.jSerialComm.SerialPortMessageListener
 import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.viewmodel.CalViewModel
 import de.jlus.hermessgui.viewmodel.LoggerViewModel
+import de.jlus.hermessgui.viewmodel.SPUConfViewModel
 import javafx.application.Platform
 import javafx.beans.property.SimpleObjectProperty
 import tornadofx.find
@@ -21,6 +22,7 @@ object Dapi {
     val activePortProperty = SimpleObjectProperty<SerialPort?>(null)
     val ports = observableListOf<SerialPort>()
     var dpReceiver: CalViewModel? = null
+    var confReceiver: SPUConfViewModel? = null
 
     private val logger = find<LoggerViewModel>()
 
@@ -73,6 +75,7 @@ object Dapi {
                     when (p0.receivedData[0].toInt()) {
                         0x00 -> handleStringMessage(content)
                         0x03 -> handleLiveData(content)
+                        0x05 -> handleConfSent(content)
                         else -> logger.warning("Unrecognized command " + p0.receivedData.toHex())
                     }
                 }
@@ -130,6 +133,56 @@ object Dapi {
 
 
     /**
+     * Requests the SPU configuration from the DAPI. Results are sent to the confReceiver, which
+     * should have been set beforehand.
+     */
+    fun commandReadSPUConf () {
+        sendCommand(byteArrayOf(0x05))
+    }
+
+
+    /**
+     * Writes the configuration passed to this function to the SPUs EEPROM. A restart
+     * of the SPU must be performed for them to take effect. A success message
+     * should be received from the SPU.
+     */
+    fun commandWriteSPUConf (conf: SPUConfig) {
+        val cmdAndContent = ByteArray(36) { 0 }
+        // the command byte
+        cmdAndContent[0] = 0x06
+
+        // the configuration name designator
+        conf.confNameProperty.value.toByteArray(Charsets.US_ASCII).copyInto(cmdAndContent, 1)
+
+        // the initilization information byte
+        cmdAndContent[17] = (
+                (conf.sgrOffsetCalInitProperty.value.numeric shl 6)
+                or (conf.rtdOffsetCalInitProperty.value.numeric shl 4)
+                or (if (conf.storeOnSodsEnabledProperty.value) 4 else 0)
+                or (if (conf.clearOnSoeEnabledProperty.value) 2 else 0)
+                or (if (conf.tmEnabledProperty.value) 1 else 0)
+        ).toByte()
+
+        // the sgr and rtd mode information byte
+        cmdAndContent[18] = (conf.sgrPGAProperty.value.numeric or conf.sgrSamplerateProperty.value.numeric).toByte()
+        cmdAndContent[19] = (conf.rtdPGAProperty.value.numeric or conf.rtdSamplerateProperty.value.numeric).toByte()
+
+        // the minimum and maximum data storage time
+        val minVal = conf.storeMinTimeProperty.value * 4000
+        val maxVal = conf.storeMaxTimeProperty.value * 4000
+        for (i in 4 until 8) {
+            // minimum time big endianness
+            cmdAndContent[20+i] = ((minVal ushr ((7-i)*8)) and 0xFF).toByte()
+            cmdAndContent[28+i] = ((maxVal ushr ((7-i)*8)) and 0xFF).toByte()
+        }
+
+        // send command to SPU and write to configuration
+        sendCommand(cmdAndContent)
+        logger.info("Configuration \"${conf.confNameProperty.value}\" sent to SPU")
+    }
+
+
+    /**
      * Performs the internal handling of received string messages
      */
     private fun handleStringMessage (content: ByteArray) {
@@ -176,6 +229,43 @@ object Dapi {
 
         Platform.runLater {
             dpReceiver?.receiveDatapackage(stampValues)
+        }
+    }
+
+
+    /**
+     * Updates a subscribed SPUConfViewModel and removes the receiver reference to that ViewModel
+     */
+    private fun handleConfSent (content: ByteArray) {
+        // do nothing, if no receiver is defined
+        val cr = confReceiver ?: return
+        // reset the receiver
+        confReceiver = null
+
+        // set the ViewModel data
+        Platform.runLater {
+            cr.confName.value = content.decodeToString(endIndex = 16).trim { it == 0.toChar() }
+            cr.sgrOffsetCalInit.value = SPUConfCalibrationTypes
+                .fromNumeric((content[16].toInt() shr 6) and 0x3)
+            cr.rtdOffsetCalInit.value = SPUConfCalibrationTypes
+                .fromNumeric((content[16].toInt() shr 4) and 0x3)
+            cr.storeOnSodsEnabled.value = (content[16].toUInt() and 0x04U) != 0x00U
+            cr.clearOnSoeEnabled.value = (content[16].toUInt() and 0x02U) != 0x00U
+            cr.tmEnabled.value = (content[16].toUInt() and 0x01U) != 0x00U
+            cr.sgrSamplerate.value = SPUConfSamplerate.fromNumeric((content[17].toUInt() and 0x0FU).toInt())
+            cr.sgrPGA.value = SPUConfPGA.fromNumeric((content[17].toUInt() and 0xF0U).toInt())
+            cr.rtdSamplerate.value = SPUConfSamplerate.fromNumeric((content[18].toUInt() and 0x0FU).toInt())
+            cr.rtdPGA.value = SPUConfPGA.fromNumeric((content[18].toUInt() and 0xF0U).toInt())
+
+            // read minimum data storage time
+            var valMin: ULong = 0u
+            var valMax: ULong = 0u
+            for (i in 0..7) {
+                valMin = (valMin shl 8) or (content[i + 19].toULong() and 0xFFu)
+                valMax = (valMax shl 8) or (content[i + 27].toULong() and 0xFFu)
+            }
+            cr.storeMaxTime.value = (valMax / 4000U).toInt()
+            cr.storeMinTime.value = (valMin / 4000U).toInt()
         }
     }
 

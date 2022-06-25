@@ -10,7 +10,9 @@ import de.jlus.hermessgui.viewmodel.ProjectViewModel
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.scene.chart.NumberAxis
 import javafx.scene.chart.XYChart.Series
+import javafx.scene.control.TextFormatter
 import javafx.scene.text.Font
+import javafx.util.converter.IntegerStringConverter
 import tornadofx.*
 import java.io.File
 
@@ -63,7 +65,12 @@ class CalTab: MainTab("ADC Cal") {
                             spinner(
                                 1, Int.MAX_VALUE, vm.targetSize.value, 6,
                                 true, vm.targetSize
-                            )
+                            ) {
+                                required()
+                                editor.textFormatter = TextFormatter(IntegerStringConverter(), vm.targetSize.value) {
+                                    if (it.isContentChange && it.controlNewText.toIntOrNull() == null) null else it
+                                }
+                            }
                         }
                     }
                 }
@@ -146,7 +153,7 @@ class CalTab: MainTab("ADC Cal") {
                     linechart("RTD", NumberAxis(), NumberAxis()) {
                         animated = true
                         xAxis.label = "Time since start [s]"
-                        yAxis.label = "Temperature [°C]"
+                        yAxis.label = "Temperature dependent value"
                         for (i in vm.datapointsRtd.indices) {
                             val series = Series<Number, Number>()
                             series.data = vm.datapointsRtd[i]

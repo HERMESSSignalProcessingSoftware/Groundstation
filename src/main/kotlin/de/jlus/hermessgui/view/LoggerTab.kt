@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 class LoggerTab : MainTab("Logger") {
     private val loggerViewModel by inject<LoggerViewModel>()
 
-    override val root = borderpane() {
+    override val root = borderpane {
         top = hbox {
             alignment = Pos.CENTER_RIGHT
             paddingAll = 10.0

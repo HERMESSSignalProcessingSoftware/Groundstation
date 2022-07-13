@@ -4,9 +4,9 @@ import com.fazecast.jSerialComm.SerialPort
 import javafx.scene.image.Image
 
 // versions
-const val thisVersion = "1.1.0"
-const val dapiVersion = "1.1.0"
-const val tmVersion = "Not supported"
+const val thisVersion = "1.2.0"
+const val dapiVersion = "1.1.2"
+const val tmVersion = "2.0.0"
 
 // tabIds
 const val tabIdEditProject = "PROJECT:EDIT"
@@ -30,6 +30,12 @@ const val dapiBaudrate = 115200
 const val dapiParity = SerialPort.EVEN_PARITY
 const val dapiStopBits = SerialPort.ONE_STOP_BIT
 const val dapiDataBits = 8
+
+// tm connection
+const val tmBaudrate = 38400
+const val tmParity = SerialPort.NO_PARITY
+const val tmStopBits = SerialPort.ONE_STOP_BIT
+const val tmDataBits = 8
 
 // enums for SPU configuration
 const val maxRecordingTimeSeconds = 3600

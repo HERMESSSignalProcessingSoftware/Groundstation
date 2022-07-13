@@ -23,10 +23,9 @@ Supports data-and-programming-interface (DAPI) protocol 0.0.1
 
 ### TM Features
 Supports telemetry (TM) protocol 0.0.1
-- [ ] Connect via TM
-- [ ] Read and record status data
-- [ ] Read and record measurements
-- [ ] Life preview of measurements and status
+- [X] Connect via TM
+- [X] Life preview of status
+- [X] Life view of text messages
 
 
 ## Usage

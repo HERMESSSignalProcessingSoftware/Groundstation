@@ -2,6 +2,7 @@ package de.jlus.hermessgui.view
 
 import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.model.Dapi
+import de.jlus.hermessgui.model.Tm
 import de.jlus.hermessgui.view.MainTab.Companion.findByTabId
 import de.jlus.hermessgui.viewmodel.*
 import javafx.beans.property.*
@@ -22,7 +23,6 @@ import java.io.File
  */
 class MainView : View("Preliminary HERMESS SPU Interface software") {
     private val projectVm by inject<ProjectViewModel>()
-    private val tmVm by inject<TmViewModel>()
     private val loggerVm by inject<LoggerViewModel>()
 
     private val progressValue = SimpleDoubleProperty(0.0)
@@ -80,18 +80,34 @@ class MainView : View("Preliminary HERMESS SPU Interface software") {
                 }
                 item("DAPI: Configure").action { openMainTab(::SPUConfigTab) }
                 item("DAPI: ADC calibrations").action { openMainTab(::CalTab) }
+                // TODO !!! Readout measurements missing
                 item("DAPI: Readout measurements").action { warning("Not implemented yet") }
                 separator()
                 menu("TM: Connect") {
-                    enableWhen(tmVm.itemProperty.isNull)
-                    item("Reload ports").isDisable = true
+                    val portItems = mutableListOf<MenuItem>()
+                    Tm.ports.onChange {
+                        // delete all menu items
+                        for (rem in portItems) {
+                            items.remove(rem)
+                        }
+                        // add new elements for the ports
+                        for (added in it.list) {
+                            val menuItem = item(added.descriptivePortName)
+                            menuItem.action { Tm.connect(added) }
+                            portItems.add(menuItem)
+                        }
+                    }
+                    enableWhen(Tm.activePortProperty.isNull)
+                    item("Reload ports").action(Tm::reloadPorts)
                     separator()
+                    Tm.reloadPorts()
                 }
                 item("TM: Disconnect") {
-                    disableWhen(tmVm.itemProperty.isNull)
+                    disableWhen(Tm.activePortProperty.isNull)
+                    action(Tm::disconnect)
                 }
                 item("TM: Life view") {
-                    disableWhen(tmVm.itemProperty.isNull)
+                    action { openMainTab(::TmTab, "tm")}
                 }
                 separator()
                 item("Interaction Log").action { openMainTab(::LoggerTab, "logger") }

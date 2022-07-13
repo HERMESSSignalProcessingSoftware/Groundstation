@@ -15,6 +15,11 @@ class MainClass: App(MainView::class, Styles::class) {
     private val projectVm by inject<ProjectViewModel>()
 
 
+    init {
+        reloadStylesheetsOnFocus()
+    }
+
+
     override fun start(stage: Stage) {
         stage.isMaximized = true
         setStageIcon(Image("imgs/icon.png"))

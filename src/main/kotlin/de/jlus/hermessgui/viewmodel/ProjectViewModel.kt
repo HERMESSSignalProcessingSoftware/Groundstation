@@ -15,6 +15,7 @@ import java.io.IOException
  */
 class ProjectViewModel: ItemViewModel<Project>(Project()) {
     val description = bind(Project::descriptionProperty)
+    val tmBaudrate = bind(Project::tmBaudrateProperty)
     val file = bind(Project::fileProperty)
 
     val name: Binding<String> = file.stringBinding { it?.nameWithoutExtension ?: "UNDEFINED" }

@@ -1,6 +1,7 @@
 package de.jlus.hermessgui.model
 
 import de.jlus.hermessgui.app.regexProjectName
+import de.jlus.hermessgui.app.tmBaudrateDefault
 import javafx.beans.property.*
 import tornadofx.JsonModel
 import tornadofx.*
@@ -16,6 +17,8 @@ import javax.json.JsonObject
 class Project(initFile: File? = null): JsonModel {
     val descriptionProperty = SimpleStringProperty("NO DESCRIPTION SET")
     var description: String by descriptionProperty
+    val tmBaudrateProperty = SimpleIntegerProperty(tmBaudrateDefault)
+    var tmBaudrate: Int by tmBaudrateProperty
     val fileProperty = SimpleObjectProperty<File>(initFile)
     var file: File? by fileProperty
 
@@ -80,6 +83,7 @@ class Project(initFile: File? = null): JsonModel {
             if (!json.keys.containsAll(listOf("description")))
                 warning("Corrupted file loaded: Not all required keys existing.")
             description = string("description") ?: "UNDEFINED"
+            tmBaudrate = int("tmBaudrate") ?: tmBaudrateDefault
         }
     }
 
@@ -87,6 +91,7 @@ class Project(initFile: File? = null): JsonModel {
     override fun toJSON(json: JsonBuilder) {
         with(json) {
             add("description", description)
+            add("tmBaudrate", tmBaudrate)
         }
     }
 }

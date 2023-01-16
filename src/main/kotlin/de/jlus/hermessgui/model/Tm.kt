@@ -5,6 +5,7 @@ import com.fazecast.jSerialComm.SerialPortEvent
 import com.fazecast.jSerialComm.SerialPortMessageListener
 import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.viewmodel.LoggerViewModel
+import de.jlus.hermessgui.viewmodel.ProjectViewModel
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleIntegerProperty
@@ -35,6 +36,7 @@ object Tm {
     private var capturingTimestampFragments = false
     private val textMsg = mutableListOf<Byte>()
     private val logger = find<LoggerViewModel>()
+    private val projectVM = find<ProjectViewModel>()
 
 
     /**
@@ -58,7 +60,7 @@ object Tm {
 
         // open port
         if (port.openPort()
-            && port.setComPortParameters(tmBaudrate, tmDataBits, tmStopBits, tmParity)) {
+            && port.setComPortParameters(projectVM.tmBaudrate.value, tmDataBits, tmStopBits, tmParity)) {
             // add data listener
             port.addDataListener(object : SerialPortMessageListener {
                 override fun getListeningEvents () =

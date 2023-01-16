@@ -11,7 +11,7 @@ _.herconf_, _.hercal_, _.hermeas_
 - [X] Organize in project files
 - [X] Store configuration files
 - [X] Store ADC calibration data
-- [ ] Visualize measurements data as line plot
+- [X] Visualize measurements data as line plot
 - [ ] Visualize measurements data as center of force graphic for a specific time
 
 ### DAPI Features

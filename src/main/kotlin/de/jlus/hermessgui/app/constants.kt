@@ -4,7 +4,7 @@ import com.fazecast.jSerialComm.SerialPort
 import javafx.scene.image.Image
 
 // versions
-const val thisVersion = "1.2.0"
+const val thisVersion = "1.2.1"
 const val dapiVersion = "1.1.2"
 const val tmVersion = "2.0.0"
 
@@ -32,7 +32,7 @@ const val dapiStopBits = SerialPort.ONE_STOP_BIT
 const val dapiDataBits = 8
 
 // tm connection
-const val tmBaudrate = 38400
+const val tmBaudrateDefault = 38400
 const val tmParity = SerialPort.NO_PARITY
 const val tmStopBits = SerialPort.ONE_STOP_BIT
 const val tmDataBits = 8

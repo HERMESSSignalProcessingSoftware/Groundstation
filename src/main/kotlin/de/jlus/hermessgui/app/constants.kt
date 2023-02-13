@@ -4,9 +4,9 @@ import com.fazecast.jSerialComm.SerialPort
 import javafx.scene.image.Image
 
 // versions
-const val thisVersion = "1.2.1"
+const val thisVersion = "1.3.1"
 const val dapiVersion = "1.1.2"
-const val tmVersion = "2.0.0"
+const val tmVersion = "3.0.0"
 
 // tabIds
 const val tabIdEditProject = "PROJECT:EDIT"

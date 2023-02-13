@@ -80,6 +80,11 @@ class TmTab : MainTab("Telemetry Live View") {
             }
 
             row {
+                indicator("TM active", Tm.tmToggle.toBinding(), "This field will toggle with every " +
+                        "received TM dataframe")
+            }
+
+            row {
                 indicator(
                     "TM Port connected", Tm.activePortProperty.isNotNull,
                     "The ground station software currently has a connection to a TM interface. " +

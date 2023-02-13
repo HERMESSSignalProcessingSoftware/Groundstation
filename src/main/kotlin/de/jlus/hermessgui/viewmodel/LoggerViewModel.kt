@@ -59,8 +59,8 @@ class LoggerViewModel: ItemViewModel<Logger>(Logger()) {
      * @param entry
      */
     private fun log (entry: Logger.LogEntry) {
-        item.entries.add(entry)
         Platform.runLater {
+            item.entries.add(entry)
             statusText.value = entry.message
             statusStyle.value = "-fx-text-fill: ${entry.severity.color}"
         }

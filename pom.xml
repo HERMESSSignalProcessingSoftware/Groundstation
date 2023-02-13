@@ -10,9 +10,9 @@
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>1.7.0</kotlin.version>
+        <kotlin.version>1.8.10</kotlin.version>
         <tornadofx.version>1.7.20</tornadofx.version>
-        <openjfx.version>18.0.1</openjfx.version>
+        <openjfx.version>19.0.2.1</openjfx.version>
         <main.class>de.jlus.hermessgui.app.MainClassKt</main.class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

@@ -6,6 +6,7 @@ import com.fazecast.jSerialComm.SerialPortMessageListener
 import de.jlus.hermessgui.app.*
 import de.jlus.hermessgui.viewmodel.LoggerViewModel
 import de.jlus.hermessgui.viewmodel.ProjectViewModel
+import javafx.application.Platform
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleIntegerProperty
@@ -20,6 +21,7 @@ object Tm {
 
     val successRate = SimpleDoubleProperty(.0)
     val timestamp = SimpleIntegerProperty(0)
+    val tmToggle = SimpleBooleanProperty(false)
     val restartAfterWdTriggered = SimpleBooleanProperty(false)
     val loAsserted = SimpleBooleanProperty(false)
     val soeAsserted = SimpleBooleanProperty(false)
@@ -30,8 +32,8 @@ object Tm {
     val memoryClearedBeforeSods = SimpleBooleanProperty(false)
     val numMessagesReceived = SimpleIntegerProperty(0)
 
-    private val successList = LinkedList(List(30) {1})
-    private var lastFrameId: UByte = 0U
+    private val successList = LinkedList(List(15) {1})
+    private var lastFrameId: UByte? = null
     private val timestampFragments = mutableListOf<Int>()
     private var capturingTimestampFragments = false
     private val textMsg = mutableListOf<Byte>()
@@ -79,15 +81,20 @@ object Tm {
                     // take note of any malformations
                     val receivedCrc: Int = (p0.receivedData[60].toUInt().shl(8)
                             or p0.receivedData[61].toUInt()).toInt()
-                    if (size != 64 || receivedCrc != crc16.CCITT_FALSE(p0.receivedData, 0, 60)) {
+                    val calculatedCrc = crc16.CCITT_FALSE(p0.receivedData, 0, 60)
+                    if (size != 64) { //|| receivedCrc != calculatedCrc) {
                         // size or CRC wrong
                         updateSuccessRate(false)
                     }
                     else {
+                        // toggle visual receiver
+                        tmToggle.value = !tmToggle.value
+
                         // detect missing frames in between
-                        lastFrameId.inc()
+                        lastFrameId = lastFrameId?.inc() ?: p0.receivedData[0].toUByte()
                         if (lastFrameId != p0.receivedData[0].toUByte()) {
                             // throw away all stored data in between frames
+                            lastFrameId = p0.receivedData[0].toUByte()
                             updateSuccessRate(false)
                             textMsg.clear()
                             timestampFragments.clear()
@@ -98,40 +105,27 @@ object Tm {
                             updateSuccessRate(true)
 
                             // decode string message
-                            textMsg.addAll(p0.receivedData.slice(4..59))
+                            textMsg.addAll(p0.receivedData.slice(6..59))
                             if (textMsg.contains(0)) {
                                 // a full message was read
-                                val str = textMsg.toByteArray().toString(Charsets.US_ASCII)
-                                val groups = Regex("""^(.+)([012])\x00$""",
+                                val str = textMsg.toByteArray().toString(Charsets.US_ASCII).trim { it <= ' ' }
+                                val groups = Regex("""^(.+)([012])$""",
                                     setOf(RegexOption.DOT_MATCHES_ALL, RegexOption.MULTILINE)).find(str)?.groupValues
                                 textMsg.clear()
 
-                                if (groups == null) {
+                                if (groups == null && str.isNotBlank()) {
                                     logger.warning("Dropped corrupted TM text message")
                                 }
-                                else {
-                                    numMessagesReceived.value++
+                                else if (str.isNotBlank()) {
+                                    Platform.runLater {
+                                        numMessagesReceived.value++
+                                    }
+                                    groups!!
                                     if (groups[2] == "0") logger.info(groups[1], "TM")
                                     else if (groups[2] == "1") logger.warning(groups[1], "TM")
                                     else if (groups[2] == "2") logger.error(groups[1], "TM")
                                 }
                             }
-                        }
-
-                        // store partial timestamp, even if some messages were skipped. In that case the
-                        // previous timestampFragments were deleted anyway
-                        if (capturingTimestampFragments) {
-                            timestampFragments.add(p0.receivedData[3].toInt())
-                            if (timestampFragments.size == 8) {
-                                var ts: ULong = 0u
-                                for (i in 0..7) {
-                                    ts = (ts shl 8) or (timestampFragments[i].toULong() and 0xFFu)
-                                }
-                                timestamp.value = (ts / 4000U).toInt()
-                                timestampFragments.clear()
-                            }
-                            else if (timestampFragments.size > 8)
-                                timestampFragments.clear()
                         }
 
                         // update general status
@@ -144,6 +138,25 @@ object Tm {
                         recordingToMemory.value = sta0.shr(2).and(1U) == 1U
                         wpAsserted.value = sta0.shr(1).and(1U) == 1U
                         memoryClearedBeforeSods.value = sta0.and(1U) == 1U
+                        capturingTimestampFragments = p0.receivedData[2].toUInt().and(1U) == 1U
+
+                        // store partial timestamp, even if some messages were skipped. In that case the
+                        // previous timestampFragments were deleted anyway
+                        if (capturingTimestampFragments || timestampFragments.size > 8) {
+                            timestampFragments.clear()
+                        }
+
+                        timestampFragments.add(p0.receivedData[3].toInt())
+                        if (timestampFragments.size == 8) {
+                            var ts: ULong = 0u
+                            for (i in 0..7) {
+                                ts = (ts shl 8) or (timestampFragments[i].toULong() and 0xFFu)
+                            }
+                            Platform.runLater {
+                                timestamp.value = (ts / 4000U).toInt()
+                            }
+                            timestampFragments.clear()
+                        }
                     }
                 }
             })
@@ -181,8 +194,8 @@ object Tm {
         // remove first
         successList.remove()
         // fold from old to new
-        successRate.value = successList.foldIndexed(0.0) { index: Int, acc: Double, v: Int ->
-            acc + (v / (index + 1))
-        } / 15
+        Platform.runLater {
+            successRate.value = successList.sum().toDouble() / 15
+        }
     }
 }

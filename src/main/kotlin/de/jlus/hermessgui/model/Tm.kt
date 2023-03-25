@@ -91,10 +91,15 @@ object Tm {
                         tmToggle.value = !tmToggle.value
 
                         // detect missing frames in between
-                        lastFrameId = if (lastFrameId == null) p0.receivedData[0].toUByte() else lastFrameId?.inc()
-                        if (lastFrameId != p0.receivedData[0].toUByte()) {
+                        val tmpLastFrameId = lastFrameId
+                        val receivedFrameId = p0.receivedData[0].toUByte()
+                        lastFrameId = (if (tmpLastFrameId == null || tmpLastFrameId >= receivedFrameId)
+                            receivedFrameId
+                        else
+                            tmpLastFrameId.inc())
+                        if (lastFrameId != receivedFrameId) {
                             // throw away all stored data in between frames
-                            lastFrameId = p0.receivedData[0].toUByte()
+                            lastFrameId = receivedFrameId
                             updateSuccessRate(false)
                             textMsg.clear()
                             timestampFragments.clear()
